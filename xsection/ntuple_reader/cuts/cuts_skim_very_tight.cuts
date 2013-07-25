@@ -1,0 +1,42 @@
+TYPE	 301313
+MODE        4  # 1 - MC , 2 - DATA , 4 - Upsilon Isolation
+MUTYPE1	    4  # tma
+MUTYPE2    12  # lst 
+PTLO      2.0 #MUON PT min
+PTMI      2.5
+PTHI    100.0 #MUON PT max
+PTBARREL  3.5
+ETABARREL 1.2
+ETALO    -0.9
+ETAMI     1.4
+ETAHI     0.9
+PTCAND  100.0  
+RAPCAND   0.5  
+CHI2      4.0
+RESTYPE   553
+BIN       100
+MASSLO    8.5
+MASSHI   11.5
+UPSTYPE     1
+DETA      0.2
+DPHI      0.1
+BARREL      1
+PT_CORR      0
+JPSI_Z_CORR 10  # cutoff for JPsi/Z Correction
+JPSI_Z_WEIGHT 0 #Weight of muon / Z corrections for intermediate region
+MU_ETA_MAX 2.5 #MAX MUON ETA
+HLTPATH     0  HLT_Dimuon0_Barrel_Upsilon_v1 
+HLTLABEL    0  hltDimuon0BarrelUpsilonL3Filtered:HLT::  
+HLTPATH1     0  HLT_Dimuon5_Upsilon_Barrel_v1 
+HLTPATH2     0  HLT_Dimuon5_Upsilon_Barrel_v2
+HLTPATH3     0  HLT_Dimuon5_Upsilon_Barrel_v3
+HLTPATH4     0  HLT_Dimuon5_Upsilon_Barrel_v5
+HLTLABEL1    0  hltBarrelUpsilonL3Filtered:HLT::
+HLTPATH5     0  HLT_Dimuon7_Upsilon_Barrel_v1
+HLTPATH6     0  HLT_Dimuon7_Upsilon_Barrel_v4
+HLTLABEL2    0  hltBarrelDimuon7UpsilonL3Filtered:HLT::
+HLTPATH7     0  HLT_Dimuon9_Upsilon_Barrel_v1
+HLTPATH8     0  HLT_Dimuon9_Upsilon_Barrel_v4
+HLTLABEL3    0  hltDimuon9BarrelUpsilonL3Filtered:HLT:: 
+HLTPATH9     0  HLT_Dimuon7_Upsilon_Barrel_v5
+HLTPATH10    0  HLT_Dimuon9_Upsilon_Barrel_v5

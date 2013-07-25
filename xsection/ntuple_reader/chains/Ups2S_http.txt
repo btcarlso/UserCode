@@ -1,0 +1,7 @@
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_1.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_2.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_3.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_4.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_5.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_6.root
+http://dcmu00.cern.ch//store/ben/MC/UpsGun/Ups2S/Acc_2S_0_100_NewVtx_7.root

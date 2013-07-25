@@ -1,0 +1,13 @@
+Universe = vanilla
+Executable = SCRIPT
+x509userproxy = /tmp/x509up_u46545
+Requirements = Memory >= 199 &&OpSys == "LINUX"&& (Arch != "DUMMY" )&& Disk > 1000000 && ( TARGET.FileSystemDomain == "fnal.gov" )
+Should_Transfer_Files = YES
+transfer_input_files = ../condor_src.tgz, JSON, fileLists.tgz, ANALYZER, ../SusyEventAnalyzer.h, ../SusyEventAnalyzer.cc, ../SusyEvent.h, ../SusyEvent.cc, /tmp/x509up_u46545
+WhenToTransferOutput = ON_EXIT
+Output = JobOut/job_$(Cluster)_$(Process).stdout
+Error  = JobOut/job_$(Cluster)_$(Process).stderr
+Log    = JobOut/job_$(Cluster)_$(Process).log
+notification = Never
+Arguments = $(process)
+Queue NJOBS

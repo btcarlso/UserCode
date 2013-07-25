@@ -1,0 +1,403 @@
+// ======================================================================
+// -- This file contains general setup stuff 
+// ======================================================================
+
+// ----------------------------------------------------------------------
+treeReaderXS::treeReaderXS(TChain *chain, TString evtClassName) {
+  if (chain == 0) {
+    cout << "You need to pass a chain!" << endl;
+  }
+  fpChain = chain; 
+  fNentries = chain->GetEntries();
+  init(evtClassName);
+}
+
+// ----------------------------------------------------------------------
+void treeReaderXS::init(TString evtClassName) {
+  fpEvt = new TAna01Event(0);
+  fpChain->SetBranchAddress(evtClassName, &fpEvt);
+}
+
+// ----------------------------------------------------------------------
+treeReaderXS::~treeReaderXS() {
+  if (!fpChain) return;
+  delete fpChain->GetCurrentFile();
+}
+
+// ----------------------------------------------------------------------
+void treeReaderXS::openHistFile(TString filename) {
+  fWeightFile = new TFile("rw.root","READ");
+
+  fpHistFile = new TFile(filename.Data(), "RECREATE");
+  fpHistFile->cd();
+   
+  rho_file = new TFile("rho_factor.root","READ"); 
+  mueff_file = new TFile("eff_all.root","READ");
+
+
+  fpHistFile->mkdir("vertex_optimization");
+  fpHistFile->mkdir("vertex_position");
+  fpHistFile->mkdir("various_histograms");
+  fpHistFile->mkdir("candidate_selection");
+  fpHistFile->mkdir("shifts");	
+  fpHistFile->mkdir("dm_hist"); 
+  fpHistFile->mkdir("dm_hist1");
+  fpHistFile->mkdir("summary");
+  fpHistFile->mkdir("gen_info");
+  fpHistFile->mkdir("efficiency");
+  fpHistFile->mkdir("acceptance");
+  fpHistFile->mkdir("cuts");
+  fpHistFile->mkdir("errors");
+  fpHistFile->mkdir("track_info");
+  fpHistFile->mkdir("binned_ups");
+  fpHistFile->mkdir("kinematics");	
+
+   cout << "==> Opened " << fpHistFile->GetName() << endl;
+}
+
+void treeReaderXS::initialize_counters(){
+   NMuChk=0;
+   NScaled=0;
+   NFired=0;
+   Nnames=0;
+   Nselected=0; 
+
+   Nsmeared=0;
+
+   Nr1=0; 
+   Nr2=0;
+   Nr3=0; 
+   Nr5=0;	
+   Nds=0;	
+
+
+}
+
+void treeReaderXS::print_numbers(int nevents, int h){
+  int good_events;  
+   if(h==1){
+   good_events=((TH1D*)fpHistFile->FindObjectAny("UpsilonMass"))->GetEntries(); 
+   cout << "Passed MuIDCheck: " << NMuChk << endl; 
+   cout << "Passed pre-scaled check: " << NScaled << endl;
+   cout << "Passed name selection: " << Nnames << endl; 
+   cout << "Passed Fired check: " << NFired << endl;   
+   cout << "Passed Selection Check: " << Nselected << endl; 
+   cout << "Total Number of events in Histogram: " << good_events << endl;
+   cout << "Total events checked: " << nevents << endl; 
+   cout << "Number of events smeared: " << Nsmeared << endl; 
+   cout << "Fraction of good events: "<<static_cast<double>(good_events)/(static_cast<double>(nevents)) << endl; 
+	}
+
+   if(h==0){
+   cout << "Number of events with Pt<10GeV: " << Nr5 << endl;  	
+   cout << "Number of events in region1: " << Nr1 << endl; 
+   cout << "Number of events in region2: " << Nr2 << endl; 
+   cout << "Number of events in region3: " << Nr3 << endl; 
+   cout << "Number of events discarded: " << Nds << endl; 
+ 
+   }//h==0
+	
+
+
+}
+
+void treeReaderXS::normalize(){
+
+double NS=static_cast<double>(((TH1D*)fpHistFile->FindObjectAny("UpsilonMass"))->GetEntries());
+
+}
+
+void treeReaderXS::openCopyFile1(TString filename){
+  // create a file for saving skimmed events
+  fpCopyFile1 = new TFile(filename.Data(),"RECREATE");
+  cout << "==> Opened " << fpCopyFile1->GetName() << endl; 
+
+  fpCopyFile1->cd();
+  copy_tree1 = new TTree("T1","Events");
+  copy_evt1 = new TAna01Event(0);
+  copy_tree1->Branch("TAna01Event","TAna01Event",&copy_evt1,256000/8,1);
+}
+
+void treeReaderXS::openCopyFile2(TString filename){
+  // create a file for saving skimmed events
+  fpCopyFile2 = new TFile(filename.Data(),"RECREATE");
+  cout << "==> Opened " << fpCopyFile2->GetName() << endl;
+
+  fpCopyFile2->cd();
+  copy_tree2 = new TTree("T1","Events");
+  copy_evt2 = new TAna01Event(0);
+  copy_tree2->Branch("TAna01Event","TAna01Event",&copy_evt2,256000/8,1);
+}
+
+void treeReaderXS::openCopyFile3(TString filename){
+  // create a file for saving skimmed events
+  fpCopyFile3 = new TFile(filename.Data(),"RECREATE");
+  cout << "==> Opened " << fpCopyFile3->GetName() << endl;
+
+  fpCopyFile3->cd();
+  copy_tree3 = new TTree("T1","Events");
+  copy_evt3 = new TAna01Event(0);
+  copy_tree3->Branch("TAna01Event","TAna01Event",&copy_evt3,256000/8,1);
+}
+
+
+void treeReaderXS::openDiscardedFile(TString discarded_filename){
+
+  fpDiscardedFile = new TFile(discarded_filename.Data(),"RECREATE");
+   cout << "==> Opened " << fpDiscardedFile->GetName() << endl;
+  fpDiscardedFile->cd();
+  copy_tree_discarded = new TTree("T1","Events");
+  copy_evt_discarded = new TAna01Event(0);
+  copy_tree_discarded->Branch("TAna01Event","TAna01Event",&copy_evt_discarded,256000/8,1);
+
+
+}
+
+// ----------------------------------------------------------------------
+void treeReaderXS::closeHistFile() {
+  cout << "==> Writing " << fpHistFile->GetName() << endl;
+  fpHistFile->cd();
+  fpHistFile->Write();
+  fpHistFile->Close();
+  delete fpHistFile;
+
+}
+
+void treeReaderXS::closeCopyFile1(){
+   // Get's current file before writing. If not, when files reach maximum size, it won't close subsequent files which are automatically generated
+    fpCopyFile1=copy_tree1->GetCurrentFile();    
+    cout << "==> Writing " << fpCopyFile1->GetName() << endl;
+    fpCopyFile1->cd();
+    fpCopyFile1->Write();
+    fpCopyFile1->Close();
+    delete fpCopyFile1;
+}
+
+void treeReaderXS::closeCopyFile2(){
+   // Get's current file before writing. If not, when files reach maximum size, it won't close subsequent files which are automatically generated
+    fpCopyFile2=copy_tree2->GetCurrentFile();
+    cout << "==> Writing " << fpCopyFile2->GetName() << endl;
+    fpCopyFile2->cd();
+    fpCopyFile2->Write();
+    fpCopyFile2->Close();
+    delete fpCopyFile2;
+}
+
+void treeReaderXS::closeCopyFile3(){
+   // Get's current file before writing. If not, when files reach maximum size, it won't close subsequent files which are automatically generated
+    fpCopyFile3=copy_tree3->GetCurrentFile();
+    cout << "==> Writing " << fpCopyFile3->GetName() << endl;
+    fpCopyFile3->cd();
+    fpCopyFile3->Write();
+    fpCopyFile3->Close();
+    delete fpCopyFile3;
+}
+
+
+
+void treeReaderXS::closeDiscardedFile(){
+    fpDiscardedFile=copy_tree_discarded->GetCurrentFile(); 
+    fpDiscardedFile=copy_tree_discarded->GetCurrentFile();
+    cout << "==> Writing " << fpDiscardedFile->GetName() << endl;
+    fpDiscardedFile->cd();
+    fpDiscardedFile->Write();
+    fpDiscardedFile->Close();
+    delete fpDiscardedFile;
+
+}
+
+// --------------------------------------------------------------------------------------------------
+void treeReaderXS::readCuts(TString filename, int dump) {
+  char  buffer[200];
+  fCutFile = filename;
+  if (dump) cout << "Reading " << fCutFile.Data() << " for cut settings" << endl;
+  sprintf(buffer, "%s", fCutFile.Data());
+  ifstream is(buffer);
+  char CutName[100];
+  float CutValue;
+  int ok(0);
+
+  TString fn(fCutFile.Data());
+
+  if (dump) {
+    cout << "====================================" << endl;
+    cout << "Cut file  " << fCutFile.Data() << endl;
+    cout << "------------------------------------" << endl;
+  }
+
+  TH1D *hcuts = new TH1D("hcuts", "", 1000, 0., 1000.);
+  hcuts->GetXaxis()->SetBinLabel(1, fn.Data());
+  int ibin; 
+
+  while (is.getline(buffer, 200, '\n')) {
+    ok = 0;
+    if (buffer[0] == '#') {continue;}
+    if (buffer[0] == '/') {continue;}
+    sscanf(buffer, "%s %f", CutName, &CutValue);
+
+    if (!strcmp(CutName, "TYPE")) {
+      TYPE = int(CutValue); ok = 1;
+      if (dump) cout << "TYPE:           " << TYPE << endl;
+    }
+
+    if (!strcmp(CutName, "PTLO")) {
+      PTLO = CutValue; ok = 1;
+      if (dump) cout << "PTLO:           " << PTLO << " GeV" << endl;
+      ibin = 11;
+      hcuts->SetBinContent(ibin, PTLO);
+      hcuts->GetXaxis()->SetBinLabel(ibin, "p_{T}^{min}(l) [GeV]");
+    }
+
+    if (!strcmp(CutName, "ETALO")) {
+      ETALO = CutValue; ok = 1;
+      if (dump) cout << "ETALO:           " << ETALO << endl;
+      ibin = 13;
+      hcuts->SetBinContent(ibin, ETALO);
+      hcuts->GetXaxis()->SetBinLabel(ibin, "#eta_{T}^{min}(l)");
+    }
+
+    if (!strcmp(CutName, "ETAHI")) {
+      ETAHI = CutValue; ok = 1;
+      if (dump) cout << "ETAHI:           " << ETAHI << endl;
+      ibin = 14;
+      hcuts->SetBinContent(ibin, ETAHI);
+      hcuts->GetXaxis()->SetBinLabel(ibin, "#eta_{T}^{max}(l)");
+    }
+
+    if (!ok) cout << "==> ERROR: Don't know about variable " << CutName << endl;
+  }
+
+  if (dump)  cout << "------------------------------------" << endl;
+}
+
+int treeReaderXS::get_mem(long* vmrss_kb, long* vmsize_kb){
+  /* Get the the current process' status file from the proc filesystem 
+  Enter the job PID to get the current process 
+  This code is adapted from http://www.umbc.edu/hpcf/resources-tara/checking-memory-usage.html
+  The output is VmSize and VmRSS. VmSize is the total amount of memory required by the program, while VmRSS is the "Resident Set Size",
+  Or the amount of memory use right now. (https://wiki.duke.edu/display/SCSC/Monitoring+Memory+Usage )
+  
+  */
+  int PID=gSystem->GetPid();
+  FILE* procfile = fopen(Form("/proc/%d/status",PID), "r");
+
+  const long to_read = 8192;
+  char buffer[to_read];
+  int read = fread(buffer, sizeof(char), to_read, procfile);
+  fclose(procfile);
+
+  short found_vmrss = 0;
+  short found_vmsize = 0;
+  char* search_result;
+
+  /* Look through proc status contents line by line */
+  char delims[] = "\n";
+  char* line = strtok(buffer, delims);
+
+  while (line != NULL && (found_vmrss == 0 || found_vmsize == 0) )
+    {
+      search_result = strstr(line, "VmRSS:");
+      if (search_result != NULL)
+	{
+	  sscanf(line, "%*s %ld", vmrss_kb);
+	  found_vmrss = 1;
+	}
+
+      search_result = strstr(line, "VmSize:");
+      if (search_result != NULL)
+	{
+	  sscanf(line, "%*s %ld", vmsize_kb);
+	  found_vmsize = 1;
+	}
+
+      line = strtok(NULL, delims);
+    }
+
+  return (found_vmrss == 1 && found_vmsize == 1) ? 0 : 1;
+}
+
+// ----------------------------------------------------------------------
+int treeReaderXS::loop(int nevents, int start, bool s_a) {
+  cout << "Entering Loop. "<< endl; 
+  int nb = 0, maxEvents(0);
+
+  skim_analysis=s_a;  
+
+  TStopwatch w; 
+  w.Start(); 
+
+  cout << "==> Chain has a total of " << fNentries << " events" << endl;
+   
+  // -- Setup for restricted running (not yet foolproof, i.e. bugfree)
+  if (nevents < 0) {
+    maxEvents = fNentries;
+  } else {
+    cout << "==> Running over " << nevents << " events" << endl;
+    maxEvents = nevents;
+  }
+  if (start < 0) {
+    start = 0; 
+  } else {
+    cout << "==> Starting at event " << start << endl;
+    if (maxEvents >  fNentries) {
+      cout << "==> Requested to run until event " << maxEvents << ", but will run only to end of chain at ";
+      maxEvents = fNentries;
+      cout << maxEvents << endl;
+    } else {
+      cout << "==> Requested to run until event " << maxEvents << endl;
+    }
+  }
+
+
+  // -- The main loop
+  int step(50000); 
+  if (maxEvents < 1000000) step = 10000; 
+  if (maxEvents < 100000)  step = 5000; 
+  if (maxEvents < 10000)   step = 500; 
+  if (maxEvents < 1000)    step = 100; 
+
+  int N_evals=static_cast<int>(maxEvents/step);
+
+  TGraph *memory_usage_vmrss = new TGraph(N_evals);
+  TGraph *memory_usage_vmsize = new TGraph(N_evals);
+  memory_usage_vmrss->SetName("memory_usage_vmrss"); 
+
+  memory_usage_vmsize->SetName("memory_usage_vmsize"); 
+
+  int ig=0; 
+  for (int jEvent = start; jEvent < maxEvents; ++jEvent) {
+     if (jEvent%step == 0){
+		long vmrss_kb; 
+		long vmsize_kb; 
+	   cout << " .. Event " << jEvent << endl;
+	   get_mem(&vmrss_kb,&vmsize_kb);
+	   cout << " .. Memory Usage: " << endl; 
+	   cout << "vmrss: " << vmrss_kb << "kb" << endl; 
+	   cout << "vmsize: " << vmsize_kb << "kb" << endl; 
+	   memory_usage_vmrss->SetPoint(ig,jEvent,static_cast<double>(vmrss_kb)/1000);	 
+	   memory_usage_vmsize->SetPoint(ig,jEvent,static_cast<double>(vmsize_kb)/1000);	  
+	   ig++; 
+		}
+	 
+    fEvent = jEvent; 
+    fpEvt->Clear();                        
+    nb += fpChain->GetEvent(jEvent);
+
+    fRun = fpEvt->fRunNumber;
+    fLS  = fpEvt->fLumiSection;
+
+	eventProcessing(); 
+  }//end for loop over events
+  
+  if(s_a==1) {
+		fpHistFile->cd();
+		memory_usage_vmrss->Write();
+		memory_usage_vmsize->Write();
+		}
+  w.Stop(); 
+  cout << "Real Time: "<<  w.RealTime()/3600 << " hrs. Total Seconds:  " << w.RealTime() << endl;
+  cout << "CPU Time: " <<  w.CpuTime()/3600 << " hrs. Total Seconds: " << w.CpuTime()<<endl; 
+  //in.close(); 
+  return 0;
+
+}

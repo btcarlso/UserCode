@@ -1,0 +1,45 @@
+TYPE	 301313
+MODE        4  # 1 - MC , 2 - DATA , 4 - Upsilon Isolation
+MUTYPE1	    4  # tma muon bit 4 on 
+MUTYPE2    12  # lst muon bit 12 on 
+PT_CORR      0 #Apply Pt corrections
+JPSI_Z_CORR 15  # cutoff for JPsi/Z Correction
+JPSI_Z_WEIGHT 0 #Weight of muon / Z corrections for intermediate region; not used yet
+PTLO      2.8 #MUON PT min
+PTMI      3.3 #Muon Min Pt in mid region, ETABARREL<eta<ETAMI
+PTHI    101.0 #MUON PT max
+PTBARREL  4.4 #Muon Pt min for eta<ETABARREL 
+ETABARREL 1.2 #Muon eta defining the barrel region
+ETAMI     1.4 #Muon eta mid region
+ETAHI     1.7 #Muon max eta
+PTCAND_MIN 9 #Min Cand Pt 
+PTCAND  101.0 #Max candiate Pt  
+RAPCAND   1.3 #Max candidate rapidity, in the analysis we use 0.5, We can use binning for that rather than a cut 
+RESTYPE   553 #MC ID
+UPSTYPE     1 #Ups Type, eg 1S,2S,3S
+MASSLO    8.5 #min dimuon mass. Upsilon Triggers have limits 8.5-11.5
+MASSHI   11.5 #max dimuon mass
+DETA      0.2 #delta eta cut between muons
+DPHI      0.1 #delta phi cut between muons
+VPROB_MIN 0.009 #Minimum value for vertex probability 
+VERTEX_SIG -1 # Maximum Vertex significance, fD3d/fD3dE -1 for no cut
+DZ_MAX 30 #Maximum Vertex dz
+DXY_MAX .35#Maximum vertex DXY
+NV_HITS_MIN 9 #Minimum Number of hits 
+MUON_CHI2_DOF_MAX 2 #Max muon chi2/NDOF
+BARREL      1 #Use barrel triggers
+HLTPATH     0  HLT_Dimuon0_Barrel_Upsilon_v1 #HLTPATH goes with HLTLABEL below. Note that HLTPATH has been commented out of xsReader
+HLTLABEL    0  hltDimuon0BarrelUpsilonL3Filtered:HLT::  
+HLTPATH1     0  HLT_Dimuon5_Upsilon_Barrel_v1 
+HLTPATH2     0  HLT_Dimuon5_Upsilon_Barrel_v2
+HLTPATH3     0  HLT_Dimuon5_Upsilon_Barrel_v3
+HLTPATH4     0  HLT_Dimuon5_Upsilon_Barrel_v5
+HLTLABEL1    0  hltBarrelUpsilonL3Filtered:HLT::
+HLTPATH5     0  HLT_Dimuon7_Upsilon_Barrel_v1
+HLTPATH6     0  HLT_Dimuon7_Upsilon_Barrel_v4
+HLTLABEL2    0  hltBarrelDimuon7UpsilonL3Filtered:HLT::
+HLTPATH7     0  HLT_Dimuon9_Upsilon_Barrel_v1
+HLTPATH8     0  HLT_Dimuon9_Upsilon_Barrel_v4
+HLTLABEL3    0  hltDimuon9BarrelUpsilonL3Filtered:HLT:: 
+HLTPATH9     0  HLT_Dimuon7_Upsilon_Barrel_v5 #Goes with HLTLABEL2, dimuon7
+HLTPATH10    0  HLT_Dimuon9_Upsilon_Barrel_v5

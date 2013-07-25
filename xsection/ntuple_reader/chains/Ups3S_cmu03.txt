@@ -1,0 +1,8 @@
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_1.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_2.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_3.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_4.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_5.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_6.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_7.root
+/data/bora/UpsGun/Ups3S/Acc_3S_0_100_NewVtx_8.root
