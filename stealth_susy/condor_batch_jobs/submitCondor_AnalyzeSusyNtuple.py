@@ -66,7 +66,8 @@ else:
     print "Output directory %s already exists.  Exiting." % baseOutdir
     sys.exit()
 
-FILE_LIST = open(filelist_input,'r')
+if filelist_input != 'NONE':
+    FILE_LIST = open(filelist_input,'r')
 
 allFiles_tmp = []
 print inputFolders
@@ -176,6 +177,7 @@ if not test:
 #    os.system("ls")
 #    os.system("ls -l -h filelist_0")
     os.system("tar -czf fileLists.tgz filelist_*")
+    print "condor_submit %s" %jdlBase
     os.system("condor_submit "+jdlBase)
     os.chdir(cwd)
 
