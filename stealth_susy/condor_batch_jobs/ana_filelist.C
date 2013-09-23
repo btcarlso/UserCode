@@ -1,5 +1,5 @@
 // Original Author:  Dongwook Jang
-// $Id: ana_filelist.C,v 1.1 2013/06/28 16:32:39 bcarlson Exp $
+// $Id: ana_filelist.C,v 1.1 2013/06/21 19:39:12 weinberg Exp $
 
 void ana_filelist(TString outputName="analysis"){
 
@@ -35,6 +35,7 @@ void ana_filelist(TString outputName="analysis"){
   chain.SetBranchStatus("vertices*", 1);
   chain.SetBranchStatus("tracks*", 1);
   chain.SetBranchStatus("photons_photons*", 1);
+  chain.SetBranchStatus("genParticles*",1);
   chain.SetBranchStatus("muons_muons*", 1);
   chain.SetBranchStatus("electrons_gsfElectrons*", 1);
   chain.SetBranchStatus("pfJets_ak5*", 1);
@@ -52,10 +53,17 @@ void ana_filelist(TString outputName="analysis"){
   sea.SetPrintInterval(10000);
   sea.SetPrintLevel(0);
 //   sea.AddHltName("HLT_Photon36_CaloId10_Iso50_Photon22_CaloId10_Iso50");
+//  sea.AddHltName("HLT_HT750");
+//  sea.AddHltName("HLT_PFNoPUHT650");
+//  sea.AddHltName("HLT_Photon36_Photon_22"); 
+//  sea.AddHltName("HLT_Photon36_CaloID10_Iso50_Photon22"); 
+
+  sea.AddHltName("HLT_IsoMu24_eta2p1");
+
   sea.CopyEvents(false);
   sea.SetProcessNEvents(-1);
 
-  sea.IncludeAJson("JSON");
+   sea.IncludeAJson("JSON");
 
   TStopwatch ts;
 
