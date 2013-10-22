@@ -96,7 +96,7 @@ protected:
   Float_t squark_m,   neutralino_m;
   Int_t   vertices_n, muons_n, electrons_n, photons_n, jets_n;
   Float_t evtWt;
-  Float_t met_et,     st;
+  Float_t met_et, st, ht ;
   Float_t gen_st; 
 
   std::vector<float>* mt;
@@ -118,6 +118,7 @@ protected:
   std::vector<float>* jet_px;
   std::vector<float>* jet_py;
   std::vector<float>* jet_pz;
+  std::vector<bool>* jet_btag;
 };
 
 SusyEventAnalyzer::SusyEventAnalyzer(TTree& tree) :

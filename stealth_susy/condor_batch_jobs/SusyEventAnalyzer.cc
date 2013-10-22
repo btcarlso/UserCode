@@ -254,6 +254,7 @@ SusyEventAnalyzer::Run()
     jet_px          = new std::vector<float>();
     jet_py          = new std::vector<float>();
     jet_pz          = new std::vector<float>();
+    jet_btag        = new std::vector<bool>();
 
     ////////// INITIALIZE HISTOGRAM / NTUPLE OUTPUT //////////
     if(printLevel > 0) out << "Open file for histograms / ntuples" << std::endl;
@@ -311,6 +312,7 @@ SusyEventAnalyzer::Run()
     tree->Branch("jet_px",          "vector<float>", & jet_px);
     tree->Branch("jet_py",          "vector<float>", & jet_py);
     tree->Branch("jet_pz",          "vector<float>", & jet_pz);
+    tree->Branch("jet_btag",        "vector<bool>",  & jet_btag);
 
     ////////// INITIALIZE JEC //////////
     // REMOVE THE LINES BELOW IF NOT RUNNING IN CMSSW ENVIRONMENT
@@ -371,7 +373,7 @@ SusyEventAnalyzer::Run()
       muon_e->clear();     muon_px->clear();     muon_py->clear();     muon_pz->clear();     muon_charge->clear();
       electron_e->clear(); electron_px->clear(); electron_py->clear(); electron_pz->clear(); electron_charge->clear();
       photon_e->clear();   photon_px->clear();   photon_py->clear();   photon_pz->clear();
-      jet_e->clear();      jet_px->clear();      jet_py->clear();      jet_pz->clear();
+      jet_e->clear();      jet_px->clear();      jet_py->clear();      jet_pz->clear(); jet_btag->clear();
 
       ////////// DUMP EVENT CONTENT //////////
       if(printLevel > 2) event.Print(out);
@@ -678,7 +680,13 @@ SusyEventAnalyzer::Run()
 
       ////////// SORT SELECTED JETS //////////
       std::sort(goodPfJets.begin(), goodPfJets.end(), PtGreater<susy::PFJet>);
-
+      
+      for (size_t i = 0; i < goodPfJets.size(); i++){
+	bool b_tag=goodPfJets[i]->bTagDiscriminators[susy::kCSV]>0.679;
+	jet_btag->push_back(b_tag);
+	//	cout << "jet i: "<< i << " b-tag: "<< b_tag << endl; 
+      }
+      
       ////////// MET //////////
       TVector2 const& metV(event.metMap["pfType01CorrectedMet"].mEt);
 
@@ -735,6 +743,17 @@ SusyEventAnalyzer::Run()
 
       float temp_gen_st=0; 
       for (size_t i = 0; i < event.genParticles.size(); i++) {
+	if(abs(event.genParticles.at(i).pdgId)==24)
+	  //	  cout << "W: " << endl; 
+	if(abs(event.genParticles.at(i).pdgId)==15) {
+	  //cout << "tau: " << endl;  
+	  //cout << "mother: " << event.genParticles.at(i).mother->pdgId << endl; 
+	}
+	if(abs(event.genParticles.at(i).pdgId)==13){
+	  if(abs(event.genParticles.at(i).mother->pdgId)==15){
+	    //cout << "pt of muon from tau decay: " << event.genParticles.at(i).momentum.Perp() << endl; 
+	  }
+	}
 	if(event.genParticles.at(i).status==1)temp_gen_st+=event.genParticles.at(i).momentum.Perp(); 
         if (abs(event.genParticles.at(i).pdgId)         >= 1000000 &&
             abs(event.genParticles.at(i).mother->pdgId) <= 1000000)
@@ -774,6 +793,7 @@ SusyEventAnalyzer::Run()
 
 
       Float_t tempSt = 0.0;
+      Float_t tempHt = 0.0;
 
       for (size_t i = 0; i < tightMuons.size(); i++) {
         tempSt += tightMuons.at(i)->momentum.Pt();
@@ -806,7 +826,7 @@ SusyEventAnalyzer::Run()
 
       for (size_t i = 0; i < goodPfJets.size(); i++) {
         tempSt += goodPfJets.at(i)->momentum.Pt();
-
+	tempHt += goodPfJets.at(i)->momentum.Pt();
         jet_e->push_back (goodPfJets.at(i)->momentum.E());
         jet_px->push_back(goodPfJets.at(i)->momentum.Px());
         jet_py->push_back(goodPfJets.at(i)->momentum.Py());
@@ -817,11 +837,12 @@ SusyEventAnalyzer::Run()
         tempSt += metV.Mod();
 
       st = tempSt;
+      ht = tempHt;
       //      std::cout << "sT: " << st << std::endl; 
 
       //&& tightMuons.size()>0
       if(goodPfJets.size()>0 ) tree->Fill();
-
+      
       ////////// FILL SKIMS //////////
       if(copyEvents){
         if(tightPhotons.size() >= 2) ggTree->Fill();
