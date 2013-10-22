@@ -1,0 +1,17 @@
+Universe = vanilla
+Executable = condor_template.sh
+#x509userproxy = /tmp/x509up_u46545
+Requirements = Memory >= 199 &&OpSys == "LINUX"&& (Arch != "DUMMY" )&& Disk > 1000000 && ( TARGET.FileSystemDomain == "fnal.gov" )
+Should_Transfer_Files = YES
+transfer_input_files = Generate_LS.c, Generate_LS.h,/uscms/home/btcarlso/code/smearing_parameters.c, /uscms/home/btcarlso/stealth_code/root_headers.h,/uscms/home/btcarlso/code/bins_final.card,../compute_xs/hist_file.root, gen_mass.root
+WhenToTransferOutput = ON_EXIT
+Output = JobOut/job_$(Cluster)_$(Process).stdout
+Error  = JobOut/job_$(Cluster)_$(Process).stderr
+Log    = JobOut/job_$(Cluster)_$(Process).log
+notification = Never
+Arguments =$(Process)
++Length = "Short"
+getenv = True
+Queue 43
+
+
