@@ -1,0 +1,520 @@
+/*
+ *  analyze_trees
+ *  
+ *
+ *  Created by Benjamin Carlson on 6/28/13.
+ *  Copyright 2013 Carnegie Mellon University. All rights reserved.
+ *
+ */
+
+#include "analyze_trees.h"
+
+
+void analyze_trees(){
+	gr_scale = (TGraph*)input->FindObjectAny("stMean_nJets"); 
+	bookHisto();
+	open_files();
+	if(input->IsOpen()!=1) {
+		cout << "File failed to open." << endl; 
+		return;
+	}
+	draw_ratio(-1);
+	for (int pT=30; pT<=100; pT+=10) 
+		draw_ratio(pT);
+	for(int nJ_num=1; nJ_num<=6; nJ_num++){
+		draw_ratio(nJ_num,2);
+		draw_ratio(nJ_num,3);
+	}
+		
+	divide_BW();
+	writeHisto();
+}
+
+void initialize_tree(TTree *tree){
+	entries=tree->GetEntries();
+	
+	tree->SetBranchAddress("jets_n",&nJets); 
+	
+	tree->SetBranchAddress("st",&st); 
+	tree->SetBranchAddress("vertices_n",&nPv); 
+	tree->SetBranchAddress("muons_n",&nMuons); 
+	tree->SetBranchAddress("photons_n",&nPhotons); 
+	tree->SetBranchAddress("electrons_n",&nElectrons); 
+	tree->SetBranchAddress("met_et",&met);
+	tree->SetBranchAddress("mt",&mt,&b_mt);
+
+	
+	tree->SetBranchAddress("electron_px",&electron_px, &b_electron_py); 
+	tree->SetBranchAddress("electron_py",&electron_py, &b_electron_py);   
+	tree->SetBranchAddress("electron_pz",&electron_pz, &b_electron_pz);
+	tree->SetBranchAddress("electron_e",&electron_e, &b_electron_e); 
+	
+	tree->SetBranchAddress("muon_px",&muon_px, &b_muon_py); 
+	tree->SetBranchAddress("muon_py",&muon_py, &b_muon_py);   
+	tree->SetBranchAddress("muon_pz",&muon_pz, &b_muon_pz);
+	tree->SetBranchAddress("muon_e",&muon_e, &b_muon_e); 
+	
+	
+	tree->SetBranchAddress("photon_px",&photon_px, &b_photon_py); 
+	tree->SetBranchAddress("photon_py",&photon_py, &b_photon_py);   
+	tree->SetBranchAddress("photon_pz",&photon_pz, &b_photon_pz);
+	tree->SetBranchAddress("photon_e",&photon_e, &b_photon_e); 
+	
+	tree->SetBranchAddress("jet_px",&jet_px, &b_jet_py); 
+	tree->SetBranchAddress("jet_py",&jet_py, &b_jet_py);   
+	tree->SetBranchAddress("jet_pz",&jet_pz, &b_jet_pz);
+	tree->SetBranchAddress("jet_e",&jet_e, &b_jet_e); 
+	
+	
+	
+}
+
+void bookHisto(){
+	cout << "Book Histograms: " << endl; 
+	float st_bins[]={0,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000,1100,1200,1300,1400,1600,1800,2000,2200,2500,3000};
+	int N=sizeof(st_bins)/sizeof(float)-1;
+	
+	for(int nJ=0; nJ<=nJetmax; nJ++){
+		CreateHistogram(Form("st_nJets%d",nJ),Form("%d jets",nJ),"s_{T} [GeV]","Events",N,st_bins);
+		CreateHistogram(Form("st_nJets%d_50GeV",nJ),Form("%d jets",nJ),"s_{T} [GeV]","Events",120,0,6000);
+		CreateHistogram(Form("st_nJets%d_shifted",nJ),Form("%d jets shifted",nJ),"s_{T} [GeV]","Events", N,st_bins);
+		CreateHistogram(Form("mt_nJets%d",nJ),Form("M_{T} %d-Jets",nJ),"M_{T}","Events",250,0,250);  
+
+
+		CreateHistogram(Form("ht_nJets%d",nJ),Form("%d jets",nJ),"H_{T} [GeV]", "Events",N,st_bins);
+		for(int pT=30; pT<=100; pT+=10){
+			CreateHistogram(Form("st_nJets%d_pTmin%d",nJ, pT),Form("%d jets, p_{T}^{min}=%d",nJ,pT), "s_{T} [GeV]", "Events",N,st_bins); 
+		}
+	}
+	for(int pT=30; pT<=100; pT+=10){
+		CreateHistogram(Form("st_nJets4p_pTmin%d",pT),"st >=4","s_{T} GeV", "Events", N,st_bins); 
+		CreateHistogram(Form("st_nJets23_pTmin%d",pT),"st <=3","s_{T} GeV", "Events",N,st_bins);
+	}
+	
+	
+	CreateHistogram("bin_width","bin_width","s_{T} GeV","Events",N,st_bins);
+	for (int i=1; i<=hName["bin_width"]->GetNbinsX(); i++) {
+		//	cout << hName["bin_width"]->GetBinWidth(i) << " "; 
+		hName["bin_width"]->SetBinContent(i,hName["bin_width"]->GetBinWidth(i)); 
+	}
+	//cout << endl; 
+	CreateHistogram("st_nJets4p","st >=4","s_{T} GeV", "Events", N,st_bins); 
+	CreateHistogram("st_nJets23","st <=3","s_{T} GeV", "Events",N,st_bins);
+	CreateHistogram("Muon_pT","Muon p_{T}","p_{T} GeV","Events",100,0,st_max); 
+	CreateHistogram("nJ_sT","nJ_sT","s_{T} GeV", "number of jets", 100, 0, 3000, 6, 0.5, 6.5); 
+	
+	CreateHistogram("data","data, nJ>=4","s_{T} GeV", "Events", 5700,300,6000);  
+	CreateHistogram("eta_sT","eta vs sT", "s_{T} GeV", "|#eta|", 10, 0, 5, 100, 0, 3000); 
+	
+	CreateHistogram("H_fraction","H_{T}/s_{T}","H_{frac}","Events",100,0.001,1);
+	CreateHistogram("EM_fraction","EM_{T}/s_{T}","EM_{frac}","Events",100,0.001,1);
+	CreateHistogram("L_fraction","L_{T}/s_{T}","L_{frac}","Events",100,0.001,1);
+	CreateHistogram("Met_fraction","M_{ET}/s_{T}","MET_{frac}","Events",100,0.001,1);
+	
+	for(int n=1; n<=4; n++){
+		CreateHistogram(Form("jetpT%d",n),Form("Jet p_{T} spectrum for %dth jet",n),"Jet p_{T} [GeV]","Events",300,0,1500);
+		CreateHistogram(Form("muonpT%d",n),Form("Muon p_{T} spectrum for %dth muon",n),"Muon p_{T} [GeV]","Events",300,0,1500);
+		CreateHistogram(Form("electronpT%d",n),Form("Electron p_{T} spectrum for %dth Electron",n),"Electron p_{T} [GeV]","Events",300,0,1500);
+		CreateHistogram(Form("photonpT%d",n),Form("Photon p_{T} spectrum for %dth Photon",n),"Photon p_{T} [GeV]","Events",300,0,1500);
+
+	}
+	
+	CreateHistogram("nJ_E","nJets vs. E", "E[GeV]","n_{Jets}",100,0,1000,10,0,10); 
+	
+	CreateHistogram("h_ggl","M_{#mu#mu#gamma}","Mass [GeV]","Events",100, 75,150); 
+	
+}
+
+
+float jet_loop(float jet_pt_min){
+	//loop over jets, return hT. 
+	float hT=0; 
+	TLorentzVector pJ;//4-vector for jets
+	int nJ_t=0; 
+	for(int j=0; j<jet_px->size(); j++){
+		TLorentzVector pJ;
+		pJ.SetPxPyPzE(jet_px->at(j), jet_py->at(j), jet_pz->at(j),jet_e->at(j)); 
+		if(j+1<=4 && fill_histos) hName[Form("jetpT%d",j+1)]->Fill(pJ.Perp(),weight); 
+	
+		if(pJ.Perp()<jet_pt_min) continue;
+		hT+=pJ.Perp();
+		nJ_t++;
+		if(fill_histos) hName2D["nJ_E"]->Fill(pJ.E(),jet_px->size(),weight); 
+	}//loop over jets
+	if(nJets<nJetmax && fill_histos) hName[Form("ht_nJets%d",nJets)]->Fill(hT,weight);
+	nJets=nJ_t;
+	return hT; 
+	
+}
+
+float photon_loop(){
+	//loop over photons
+	TLorentzVector pGamma; 
+	float EM_T=0; // transverse EM energy
+	for(int gamma=0; gamma<photon_px->size(); gamma++){
+		pGamma.SetPxPyPzE(photon_px->at(gamma),photon_py->at(gamma), photon_pz->at(gamma),photon_e->at(gamma));
+		if(gamma+1<=4) hName[Form("photonpT%d",gamma+1)]->Fill(pGamma.Perp(),weight);
+		EM_T+=pGamma.Perp(); 
+	}//loop over photons
+	return EM_T;
+}
+
+float lepton_loop(){
+	float Lepton_pT=0; 
+	TLorentzVector pM;
+	TLorentzVector pM_last; 
+	TLorentzVector pE;
+	TLorentzVector pMuMu;
+	TLorentzVector pGamma;
+	TLorentzVector pllg;
+	for(int mu=0; mu<muon_px->size(); mu++){
+		pM.SetPxPyPzE(muon_px->at(mu),muon_py->at(mu), muon_pz->at(mu),muon_e->at(mu));
+		if(muon_px->size()>1){
+			for(int mu2=mu+1; mu2<muon_px->size(); mu2++){
+				pM_last.SetPxPyPzE(muon_px->at(mu2),muon_py->at(mu2), muon_pz->at(mu2),muon_e->at(mu2));
+				pMuMu=pM+pM_last;
+				double M=pMuMu.M();
+				if(M>3.0 && M<11.5){
+					for(int gamma=0; gamma<photon_px->size(); gamma++){
+						pGamma.SetPxPyPzE(photon_px->at(gamma),photon_py->at(gamma), photon_pz->at(gamma),photon_e->at(gamma));
+						pllg=pM_last+pM+pGamma;
+						hName["h_ggl"]->Fill(pllg.M());
+					}//loop over photons
+				}
+			}
+		}
+		if(mu+1<=4) hName[Form("muonpT%d",mu+1)]->Fill(pM.Perp(),weight);
+		Lepton_pT+=pM.Perp(); 
+	}//muon loop
+	
+	for(int el=0; el<electron_px->size(); el++){
+		pE.SetPxPyPzE(electron_px->at(el),electron_py->at(el), electron_pz->at(el),electron_e->at(el));
+		if(el+1<=4) hName[Form("electronpT%d",el+1)]->Fill(pE.Perp(),weight);
+		Lepton_pT+=pE.Perp(); 
+	}//electron loop
+	return Lepton_pT; 
+}
+
+void object_loops(float MET_min, float jet_pt_min){
+	//cout << "Object Loops: " << endl;
+	fill_histos=true; 
+	Float_t hT=jet_loop(jet_pt_min);
+	Float_t EM_T=photon_loop();
+	Float_t Lepton_pT=lepton_loop();
+	
+	float my_st=EM_T+Lepton_pT+met;
+	for(int pT=30; pT<=100; pT+=10){
+		my_st=EM_T+Lepton_pT+met;
+		float tmp_hT=jet_loop(pT);
+		my_st+=tmp_hT;
+		if(nJets < nJetmax) 
+			hName[Form("st_nJets%d_pTmin%d",nJets, pT)]->Fill(my_st);
+		if(nJets>=4) hName[Form("st_nJets4p_pTmin%d",pT)]->Fill(my_st); 
+		else hName[Form("st_nJets23_pTmin%d",pT)]->Fill(my_st);
+	}
+	
+	//cout << "hT: " << hT << " EM_T: " << EM_T << " Lepton_pT: " << Lepton_pT << " MET: " << met << " sT: " << my_st << " Tree st: " << st << endl; 
+	//cout << "Fill histogram: " << endl;
+	float H_F=hT/st;
+	float EM_F=EM_T/st;
+	float L_F=Lepton_pT/st;
+	float MET_F=met/st;
+	//cout << "Fraction hadronic: " << H_F << " Fraction EM: " << EM_F << " Fraction Leptonic: " << L_F  << " Met Fraction: " << MET_F<< endl;
+	
+	hName["H_fraction"]->Fill(H_F,weight);
+    hName["EM_fraction"]->Fill(EM_F,weight);
+    hName["L_fraction"]->Fill(L_F/st,weight);
+	hName["Met_fraction"]->Fill(MET_F,weight);
+	
+}
+
+void quantile_ratio(TH1F *h_num, TH1F *h_den, TGraphAsymmErrors *g_rat){
+	//pass 3 histogrmas, numerator, denominator, and ratio
+	
+	for (size_t i = 1; i <= h_num->GetNbinsX(); i++) {
+		Float_t nNum = h_num->GetBinContent(i);
+		Float_t nDen = h_den->GetBinContent(i);
+		Float_t nRat = nNum / nDen;
+		
+		// tail = (1 - CL) / 2; For 95% CL, tail = (1 - 0.95) / 2 = 0.025
+		Float_t tail = 0.16;
+		Float_t qHi  = 0.0;
+		
+		if (nDen > 0.0)
+			qHi = ROOT::Math::fdistribution_quantile_c(tail, (nNum + 1.0) * 2.0, nDen * 2.0);
+		
+		Float_t qLo = ROOT::Math::fdistribution_quantile_c(1.0 - tail, nNum * 2.0, (nDen + 1.0) * 2.0);
+		
+		Float_t rHi = qHi * (nNum + 1.0) / nDen;
+		Float_t rLo = 0.0;
+		
+		if (nDen > 0.0)
+			rLo = qLo * nNum / (nDen + 1.0);
+		
+		if (nDen > 0.0) {
+			g_rat->SetPoint     (i - 1, h_num->GetBinCenter(i), nRat);
+			g_rat->SetPointError(i - 1, h_num->GetBinWidth (i) / 2.0, h_num->GetBinWidth  (i) / 2.0, nRat - rLo, rHi - nRat);
+		}
+		//cout << "pT: " << h_rat->GetBinCenter(i) << " N: "  << nNum << " D: " << nDen << endl;
+		//if(nDen>0) cout << "pT: " << h_rat->GetBinCenter(i) << " R: " << nRat << " +/-: " << rHi-nRat << " " << nRat-rLo << endl;
+	}	
+}
+
+void divide_BW(){
+	TH1F *BW=(TH1F*)hName["bin_width"]->Clone("BW");
+	//divide by bin width
+	output_file->cd();
+	for(int nJ=0; nJ<=nJetmax; nJ++){
+		TH1F *s1=(TH1F*) hName[Form("st_nJets%d",nJ)]->Clone(Form("st_nJets%d_GeV",nJ));
+		hName[s1->GetName()]=s1; 									
+		TH1F *h1 = (TH1F*) hName[Form("ht_nJets%d",nJ)]->Clone(Form("ht_nJets%d_GeV",nJ));
+		hName[h1->GetName()] = h1; 
+		
+
+		hName[Form("st_nJets%d_GeV",nJ)]->Divide(BW);
+		hName[Form("ht_nJets%d_GeV",nJ)]->Divide(BW);
+		hName[Form("st_nJets%d_GeV",nJ)]->GetYaxis()->SetTitle("Events/GeV");
+		hName[Form("ht_nJets%d_GeV",nJ)]->GetYaxis()->SetTitle("Events/GeV");
+		for(int pT=30; pT<=100; pT+=10){
+			TH1F *h_opt =(TH1F*) hName[Form("st_nJets%d_pTmin%d",nJ, pT)]->Clone(Form("st_nJets%d_pTmin%d_GeV",nJ,pT));
+			hName[h_opt->GetName()]=h_opt;
+			hName[Form("st_nJets%d_pTmin%d_GeV",nJ, pT)]->Divide(BW); 
+		}//loop over pT bins
+	}//loop over jets
+	
+	TH1F *st_23=(TH1F*) hName["st_nJets23"]->Clone("st_nJets23_GeV");
+	hName[st_23->GetName()]=st_23;
+	
+	TH1F *st_4p=(TH1F*) hName["st_nJets4p"]->Clone("st_nJets4p_GeV");
+	hName[st_4p->GetName()]=st_4p;
+	
+	hName["st_nJets4p_GeV"]->Divide(BW); 
+	hName["st_nJets4p_GeV"]->GetYaxis()->SetTitle("Events/GeV");
+	hName["st_nJets23_GeV"]->Divide(BW); 
+	hName["st_nJets23_GeV"]->GetYaxis()->SetTitle("Events/GeV");
+
+}
+
+void draw_ratio(int num, int den){
+	
+	TH1F *h_den=(TH1F*)hName[Form("st_nJets%d",den)]->Clone("h_den");
+	TH1F *h_num=(TH1F*)hName[Form("st_nJets%d",num)]->Clone("h_num");
+	
+	TGraphAsymmErrors *grErr = new TGraphAsymmErrors(h_den); 
+	quantile_ratio(h_num, h_den, grErr); 
+	grErr->GetXaxis()->SetTitle("s_{T} [GeV]");
+	grErr->GetYaxis()->SetTitle(Form("Ratio %d-Jets/%d-Jets",num,den)); 
+	grErr->SetName(Form("Ratio%d-%d",num,den));
+	output_file->cd();
+	grErr->Write();
+	delete grErr; 
+	delete h_den;
+	delete h_num;
+}
+
+void draw_ratio(int pT){
+	
+	TString name23="st_nJets23";
+	if(pT>0) name23=name23 + Form("_pTmin%d",pT);
+	
+	TString name4p="st_nJets4p";
+	if(pT>0) name4p=name4p + Form("_pTmin%d",pT);
+
+	TH1F *J23=(TH1F*)hName[name23]->Clone("J23");
+	TH1F *J4g=(TH1F*)hName[name4p]->Clone("J4p");
+	
+	TGraphAsymmErrors *grErr = new TGraphAsymmErrors(J23); 
+	quantile_ratio(J4g, J23, grErr); 
+	grErr->GetXaxis()->SetTitle("s_{T} GeV");
+	grErr->GetYaxis()->SetTitle("Ratio 4+/23"); 
+	if(pT>0)grErr->SetName(Form("Ratio4p-23_pTmin%d",pT));
+	else grErr->SetName("Ratio4p-23"); 
+	output_file->cd();
+	grErr->Write();
+	delete grErr; 
+	delete J23;
+	delete J4g;
+}	
+
+void fill_st(){
+	
+	float deltaX=gr_scale->Eval(nJets)-gr_scale->Eval(2); 
+	
+	hName2D["nJ_sT"]->Fill(st,nJets,weight);
+	if(nJets<nJetmax) hName[Form("st_nJets%d",nJets)]->Fill(st,weight); 
+	if(nJets<nJetmax) hName[Form("st_nJets%d_50GeV",nJets)]->Fill(st,weight); 
+	if(nJets<nJetmax) hName[Form("mt_nJets%d",nJets)]->Fill(mt->at(0),weight); 
+	if(nJets==2){
+		for(int nJ=1; nJ<=7; nJ++) hName[Form("st_nJets%d_shifted",nJ)]->Fill(st+deltaX,weight); 
+	}
+	if(nJets>=4) hName["st_nJets4p"]->Fill(st,weight);
+	else hName["st_nJets23"]->Fill(st,weight);
+	
+	
+	
+}
+
+void event_loop(TTree *tree){
+	int maxEvt=100;
+	//entries=maxEvt;
+	
+	TStopwatch t; 
+	t.Start(kFALSE); 
+	
+	double time_evt=0; 
+	
+	cout << "Entries: " << entries << endl; 
+	for (int iEvt=0; iEvt<entries; iEvt++){
+		if(iEvt%1000000==0)cout << iEvt << endl;
+		if(iEvt%1000000==0){
+			time_evt=t.RealTime()/static_cast<double> (iEvt);
+			t.Continue();
+			cout << "Real Time: " << t.RealTime() << endl; 
+			cout << "Time/Evt: " << time_evt << endl; 
+			cout << "Predicted completion time: " << time_evt*static_cast<double> ((entries-iEvt))/60 << " minutes" << endl;
+		}
+		tree->GetEntry(iEvt);
+		if(nJets<1) continue;
+		
+		if(muon_px->size()<1) continue;
+		TLorentzVector pM;
+		pM.SetPxPyPzE(muon_px->at(0),muon_py->at(0), muon_pz->at(0),muon_e->at(0));
+	//	if(pM.Perp()<45) continue;
+		 
+		fill_st();
+		object_loops(20, 45);
+		
+	}
+	
+	
+}
+
+void analyze_file(TFile *infile){
+	TTree *tree = (TTree*)infile->Get("tree");
+	cout << "Intitialize Tree: " << endl; 
+	initialize_tree(tree);
+	event_loop(tree);
+	delete tree; 
+}
+
+void open_files(){
+	/*
+	{6662,2159,640,264}; xs for W+Jets
+	{23141598,34044921,15539503,13382803}; nGen for W+Jets
+	
+	unbinned 
+	{37509}
+	{18393090}
+	 
+	{66090000,8082000.0,1024000.0,157800.0,34020.0,1757.0,115.2,27.01,3.57}; xs for QCD
+	{9560265,10365230,9238642,8501935,7669947,7832261,3783069,4119000,4107853}; nGen QCD
+	float eff[]={0.0122,0.0218,0.0395,0.0473,0.0676,0.0864,0.1024,0.0996,0.1033} filter eff QCD
+	
+	 float xs[]={107.6,25.6}; //ttbar
+	 float Ng[]={25364818,12119013}; //ttbar
+	
+	float xs[]={666,215,61,27}; //dy
+	float Ng[]={24045248,21852156,11015445,6402827}; //dy nGen
+	 
+	 3504 unbinned 
+	 30459503 ng
+	 
+	
+	TString tree_list[]={"QCD_30-50.root","QCD_50-80.root","QCD_80-120.root","QCD_120-170.root","QCD_170-300.root",
+	 "QCD_300-470.root","QCD_470-600.root","QCD_600-800.root","QCD_800-1000.root"}; // QCD
+	
+	TString tree_list[]={"w1JetsToLNu.root","w2JetsToLNu.root","w3JetsToLNu.root","w4JetsToLNu.root"}; // W+Jets
+	 
+	TString tree_list[]={"dy1JetsToLL.root","dy2JetsToLL.root","dy3JetsToLL.root","dy4JetsToLL.root"}; DY
+	
+	TString tree_list[]={"dyJetsToLL.root"};
+	 
+	TString tree_list[]={"ttJetsSemiLept.root","ttJetsFullLept.root"};//TT b
+	
+	TString tree_list[]={"singleMu_mt.root"};//data
+*/
+	 
+	TString dir="/eos/uscms/store/user/btcarlso/MC_trees/"; //MC_trees
+
+	
+	TString tree_list[]={"w2JetsToLNu.root","w3JetsToLNu.root"};
+	float xs[]={2159,640}; 
+	float Ng[]={34044921,15539503}; 
+	float eff[]={0.0122,0.0218,0.0395,0.0473,0.0676,0.0864,0.1024,0.0996,0.1033};
+	
+	
+	//TString tree_list[]={"/uscms_data/d3/btcarlso/TEST_DIR/CMSSW_5_3_8_patch3/src/SusyAnalysis/SusyNtuplizer/macro/photonHad_All/photonHad_All.root"};
+	
+	int N_files=sizeof(tree_list)/sizeof(TString);
+	cout << "N Files: " << N_files << endl; 
+	bool _MC=true;
+	weight=1;
+	for (int iF=0; iF<N_files; iF++) {
+		if(_MC) weight=xs[iF]*19600/(Ng[iF]);
+		cout << "File: "<< tree_list[iF] << " Weight: " << weight << endl; 
+		TFile *F=new TFile(dir+tree_list[iF],"READ");
+		if(!F->IsOpen()) return;
+		analyze_file(F);
+		F->Close();
+		delete F;
+	}
+	
+}
+
+//work functions, eg create histograms
+
+void CreateHistogram(const char* name,   const char* title,
+					 const char* xTitle, const char* yTitle,
+					 Int_t       nBinsX, Double_t    xLow, Double_t xUp)
+{
+	TH1F* h = new TH1F(name, title, nBinsX, xLow, xUp);
+	
+	h->GetXaxis()->SetTitle(xTitle);
+	h->GetYaxis()->SetTitle(yTitle);
+	
+	h->Sumw2();
+	
+	hName[name] = h;
+}
+
+void CreateHistogram(const char* name,   const char* title,
+					 const char* xTitle, const char* yTitle,
+					 Int_t       nBinsX, const Float_t* xBins)
+{
+	TH1F* h = new TH1F(name, title, nBinsX, xBins);
+	
+	h->GetXaxis()->SetTitle(xTitle);
+	h->GetYaxis()->SetTitle(yTitle);
+	
+	h->Sumw2();
+	
+	hName[name] = h;
+}
+
+void CreateHistogram(const char* name,   const char* title,
+					 const char* xTitle, const char* yTitle,
+					 Int_t nBinsX, Double_t xLow, Double_t xUp,
+					 Int_t nBinsY,Double_t yLow, Double_t yUp)
+{
+	TH2F* h = new TH2F(name, title, nBinsX, xLow,xUp,nBinsY, yLow,yUp);
+	
+	h->GetXaxis()->SetTitle(xTitle);
+	h->GetYaxis()->SetTitle(yTitle);
+	
+	h->Sumw2();
+	
+	hName2D[name] = h;
+}
+
+void writeHisto(){
+	output_file->cd();
+	for (std::map<TString,TH1F*>::iterator it=hName.begin(); it!=hName.end(); it++) {
+		hName[it->first]->Write();
+	}
+	for (std::map<TString,TH2F*>::iterator it=hName2D.begin(); it!=hName2D.end(); it++) {
+		hName2D[it->first]->Write();
+	}
+	
+	output_file->Close();
+	delete output_file; 
+}
