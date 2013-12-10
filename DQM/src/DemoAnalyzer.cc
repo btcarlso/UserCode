@@ -1,3 +1,4 @@
+
 // -*- C++ -*-
 //
 // Package:    DemoAnalyzer
@@ -24,6 +25,7 @@
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -49,12 +51,14 @@
 #include "DataFormats/EgammaReco/interface/BasicCluster.h"
 #include "DataFormats/EgammaReco/interface/PreshowerCluster.h"
 #include "DataFormats/EgammaReco/interface/PreshowerClusterFwd.h"
+#include "DataFormats/EgammaReco/interface/BasicClusterFwd.h"
+#include "DataFormats/EgammaReco/interface/SuperClusterFwd.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalCleaningAlgo.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalRecHitLess.h"
-
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
@@ -75,6 +79,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1.h"
+#include "TProfile.h"
 
 //
 // class declaration
@@ -92,6 +97,10 @@ class DemoAnalyzer : public edm::EDAnalyzer {
   // ----member data -----
   unsigned int minTracks_;
   TH1F *demohisto;
+  TProfile *bcEB_pv;
+  TProfile *bcEE_pv;
+  TProfile *scEE_pv;
+  TProfile *scEB_pv;
       virtual void beginJob() ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
@@ -121,7 +130,10 @@ DemoAnalyzer::DemoAnalyzer(const edm::ParameterSet& iConfig) :
    //now do what ever initialization is needed
   edm::Service<TFileService> fs;
   demohisto = fs->make<TH1F>("tracks", "Tracks", 100,0,5000);
-
+  bcEE_pv = fs->make<TProfile>("basicEE_clusters_pv","Basic clusters EE vs. PV; NPV; multi5x5EndcapBasicClusters", 50, 0,50); 
+  bcEB_pv = fs->make<TProfile>("basicEB_clusters_pv","Basic Clusters EB vs. PV; NPV; hybridBarrelBasicClusters",50, 0, 50); 
+  scEE_pv = fs->make<TProfile>("superEE_clusters_pv","Super Clusters EE vs. PV; NPV; correctedHybridSuperClusters",50, 0, 50);
+  scEB_pv = fs->make<TProfile>("superEB_clusters_pv","Super Clusters EB vs. PV; NPV; multi5x5EndcapSuperClusters",50, 0, 50);
 }
 
 
@@ -153,17 +165,48 @@ DemoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
               if (pv->isFake() || pv->tracksSize()==0)  continue;
            nPVcount++; // count non fake pv:
    }
-   LogInfo("Demo") << "Number of PV: " << nPVcount;
+   //   LogInfo("Demo") << "Number of PV: " << nPVcount;
 
-    edm::Handle<reco::BasicClusterCollection> EB_BC; //Ecalbarrel basic cluster
-   //   iEvent.getByLabel("hybridSuperClusters", EB_BC); 
-   // int Nbc=EB_BC->size(); 
-   // LogInfo("Demo") << "Number Basic Clusters: " << Nbc; 
+   Handle<reco::BasicClusterCollection> EB_BC;
+   try {
+     iEvent.getByLabel("hybridSuperClusters","hybridBarrelBasicClusters",EB_BC);
+   }catch (cms::Exception& ex) {
+     edm::LogError("EnergyScaleAnalyzer") << "Can't get collection with producer hybridBarrelBasicClusters";
+   }
+   //   LogInfo("Demo") << "Number of Basic Clusters EB: " << EB_BC->size();
+   bcEB_pv->Fill(nPVcount,EB_BC->size());
+
+   Handle<reco::BasicClusterCollection> EE_BC;
+   try {
+     iEvent.getByLabel("multi5x5SuperClusters","multi5x5EndcapBasicClusters",EE_BC);
+   }catch (cms::Exception& ex) {
+     edm::LogError("EnergyScaleAnalyzer") << "Can't get collection with producer multi5x5EndcapBasicClusters";
+   }
+   //   LogInfo("Demo") << "Number of Basic Clusters EB: " << EB_BC->size();
+   bcEE_pv->Fill(nPVcount,EE_BC->size());
 
 
+    Handle<reco::SuperClusterCollection> correctedHybridSC;
+      try {
+            iEvent.getByLabel("correctedHybridSuperClusters","",correctedHybridSC);
+       }catch (cms::Exception& ex) {
+         edm::LogError("EnergyScaleAnalyzer") << "Can't get collection with producer correctedHybridSuperClusters.";
+    }
+      //      LogInfo("Demo") << "Number of Corrected hybrid SC: " << correctedHybridSC->size();
+      
+      scEB_pv->Fill(nPVcount,correctedHybridSC->size());
+      
+      Handle<reco::SuperClusterCollection> SC_EE;
+      try {
+	iEvent.getByLabel("correctedMulti5x5SuperClustersWithPreshower",SC_EE);
+      }catch (cms::Exception& ex) {
+	edm::LogError("EnergyScaleAnalyzer") << "Can't get collection with producer correctedHybridSuperClusters.";
+      }
+      scEE_pv->Fill(nPVcount,SC_EE->size());
+      
    demohisto->Fill(tracks->size());
    if( minTracks_ <= tracks->size() ) {
-     LogInfo("Demo") << "number of tracks "<<tracks->size();
+     //LogInfo("Demo") << "number of tracks "<<tracks->size();
    }
 
 
