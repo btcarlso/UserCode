@@ -37,6 +37,10 @@ parser.add_option ('--njobs', dest='njobs', type='int',
 parser.add_option ('--test', action="store_true",
                    dest="test", default=False,
                    help="Just testing")
+parser.add_option('--output_dir', dest='output_dir', type='string',
+					default = '/eos/uscms/store/user/btcarlso/trees/',
+					help="output directory, eos")
+				   
 parser.add_option ('--json', dest='json', type='string',
                    default = '',
                    help="JSON file used to select events")
@@ -54,10 +58,21 @@ filelist_input = options.filelist_input
 scriptBase = options.scriptBase
 anaBase = options.anaBase
 njobs = options.njobs
+output_dir = options.output_dir
 json = options.json
 inputFolders = options.inputFolders
 
 cwd = os.getcwd()
+
+output_dir=output_dir+baseOutdir
+
+#create eos space
+if not os.path.isdir(output_dir) :
+    os.system("mkdir -p "+output_dir)
+    print "Making directory %s." % output_dir
+else:
+    print "Output directory %s already exists.  Exiting." % output_dir
+    sys.exit()
 
 if not os.path.isdir(baseOutdir) :
     os.system("mkdir -p "+baseOutdir)
@@ -65,6 +80,10 @@ if not os.path.isdir(baseOutdir) :
 else:
     print "Output directory %s already exists.  Exiting." % baseOutdir
     sys.exit()
+#create an output file with the output directory 
+OUTPUT_FILE = open(baseOutdir+'/filelist_outputdir.txt','w')
+OUTPUT_FILE.write(output_dir)
+OUTPUT_FILE.close();
 
 if filelist_input != 'NONE':
     FILE_LIST = open(filelist_input,'r')
@@ -170,12 +189,12 @@ else:
 for command in commandList:
     os.system(command)
 if not test:
-#    os.system("pwd")
-#    os.system("ls -l -h filelist_0")
+	#    os.system("pwd")
+	#    os.system("ls -l -h filelist_0")
     os.chdir(baseOutdir)
-#    os.system("pwd")
-#    os.system("ls")
-#    os.system("ls -l -h filelist_0")
+	#    os.system("pwd")
+	#    os.system("ls")
+	#    os.system("ls -l -h filelist_0")
     os.system("tar -czf fileLists.tgz filelist_*")
     print "condor_submit %s" %jdlBase
     os.system("condor_submit "+jdlBase)

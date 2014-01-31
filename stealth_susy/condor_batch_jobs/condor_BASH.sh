@@ -24,6 +24,7 @@ make
 
 mv $WORK_DIR/ANALYZER .
 mv $WORK_DIR/filelist_$JOB_NUMBER .
+mv $WORK_DIR/filelist_outputdir.txt .
 mv $WORK_DIR/JSON .
 mv $WORK_DIR/SusyEvent* .
 
@@ -35,16 +36,19 @@ do
   	sed -i '19i chain.Add("'$file'");' ANALYZER
 	echo "Chaining File: $file"
 done < filelist_$JOB_NUMBER
+ls filelist_outputdir.txt
+output_dir=$(sed -n 1p filelist_outputdir.txt)
+echo $output_dir
 
 root -b -q -l ANALYZER
-#echo "TOTALLY RUNNING SOME SHIT NOW"
 
 #touch result.root
 echo "Moving files: root file, analyzer, and filelist"
-mv *.root $WORK_DIR/hist_analysis_$JOB_NUMBER.root
+cp *.root $output_dir/hist_analysis_$JOB_NUMBER.root
 mv ANALYZER $WORK_DIR/ANALYZER_$JOB_NUMBER
 mv filelist_$JOB_NUMBER $WORK_DIR/filelist_used_$JOB_NUMBER
 cd $WORK_DIR
 rm -rf CMSSW_5_3_8_patch3/
 rm fileLists.tgz
+rm *.root
 #rm filelist_*
