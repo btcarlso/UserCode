@@ -225,6 +225,10 @@ SusyEventAnalyzer::createHistogram(const char* name,   const char* title,
 void
 SusyEventAnalyzer::Run()
 {
+  float SumW_Top=0;
+  float SumW_TopM=0;
+  float SumW_TopP=0;
+
   int nCnt[20];
   for(int i(0); i<20; i++) nCnt[i] = 0;
 
@@ -317,6 +321,9 @@ SusyEventAnalyzer::Run()
     jet_pz          = new std::vector<float>();
 	jet_bTagL        = new std::vector<bool>();
     jet_bTagM        = new std::vector<bool>();
+	jet_bTagT        = new std::vector<bool>();
+	jet_algFlavor        = new std::vector<int>();
+	jet_phyFlavor        = new std::vector<int>();
     jet_unc         = new std::vector<float>();
 
     w_px            = new std::vector<float>(); 
@@ -368,6 +375,8 @@ SusyEventAnalyzer::Run()
 	tree->Branch("puWeight_nom",  & puWt_nom,  "puWeight_nom/F");
 	tree->Branch("puWeight_up",   & puWt_up,   "puWeight_up/F");
 	tree->Branch("puWeight_down", & puWt_down, "puWeight_dowm/F");
+	tree->Branch("NumInteractions",  & NumInteractions,  "NumInteractions/I");//number of true interactions for pile-up re-weighting
+
 	  
     tree->Branch("met_et",  & met_et,  "met_et/F");
     tree->Branch("met_phi", & met_phi, "met_phi/F");
@@ -400,7 +409,6 @@ SusyEventAnalyzer::Run()
 	tree->Branch("loose_electron_pz",     "vector<float>", & loose_electron_pz);
 	tree->Branch("loose_electron_charge", "vector<float>", & loose_electron_charge);
 	  
-	  
     tree->Branch("photon_e",        "vector<float>", & photon_e);
     tree->Branch("photon_px",       "vector<float>", & photon_px);
     tree->Branch("photon_py",       "vector<float>", & photon_py);
@@ -409,8 +417,12 @@ SusyEventAnalyzer::Run()
     tree->Branch("jet_px",          "vector<float>", & jet_px);
     tree->Branch("jet_py",          "vector<float>", & jet_py);
     tree->Branch("jet_pz",          "vector<float>", & jet_pz);
-	tree->Branch("jet_bTagL",        "vector<bool>",  & jet_bTagL);//loose b-tags
-    tree->Branch("jet_bTagM",        "vector<bool>",  & jet_bTagM);//medium wp b-tags
+	tree->Branch("jet_bTagL",       "vector<bool>",  & jet_bTagL);//loose b-tags
+    tree->Branch("jet_bTagM",       "vector<bool>",  & jet_bTagM);//medium wp b-tags
+	tree->Branch("jet_bTagT",       "vector<bool>",  & jet_bTagT);//medium wp b-tags
+	tree->Branch("jet_algFlavor",   "vector<int>",  & jet_algFlavor);//alg flavor
+	tree->Branch("jet_phyFlavor",   "vector<int>",  & jet_phyFlavor);//phy flavor
+
     tree->Branch("jet_unc",         "vector<float>", & jet_unc);
 
     tree->Branch("w_px",            "vector<float>", & w_px); 
@@ -428,6 +440,13 @@ SusyEventAnalyzer::Run()
     tree->Branch("top_pz",          "vector<float>", & top_pz);
     tree->Branch("top_e",          "vector<float>", & top_e);
 
+	//create histogram
+	  createHistogram("h_Zmass_nGamma0","Zmass, N_{#gamma}=0","M_{Z} [GeV]", "Events", 100,0,200); 
+	  createHistogram("h_Zmass","Zmass","M_{Z} [GeV]", "Events", 100,0,200); 
+	  createHistogram("h_Nevents","Nevents","N_{Events}","",10,0,10); 
+	  //createHistogram("h_mumu","dimuon mass","M_{#mu#mu} [GeV]", "Events", 100,0,200); 
+
+	  
     ////////// INITIALIZE JEC //////////
     // REMOVE THE LINES BELOW IF NOT RUNNING IN CMSSW ENVIRONMENT
     if(useCustomJEC){
@@ -490,7 +509,8 @@ SusyEventAnalyzer::Run()
 	  loose_electron_e->clear(); loose_electron_px->clear(); loose_electron_py->clear(); loose_electron_pz->clear(); loose_electron_charge->clear();
 
 	  photon_e->clear();   photon_px->clear();   photon_py->clear();   photon_pz->clear();
-      jet_e->clear();      jet_px->clear();      jet_py->clear();      jet_pz->clear();  jet_bTagL->clear();    jet_bTagM->clear(); jet_unc->clear();
+		jet_e->clear();      jet_px->clear();      jet_py->clear();      jet_pz->clear();  jet_bTagL->clear();    jet_bTagM->clear(); jet_unc->clear();jet_bTagT->clear(); 
+		jet_algFlavor->clear(); jet_phyFlavor->clear();
       w_px->clear();       w_py->clear();        w_pz->clear();        w_e->clear();
       z_px->clear();       z_py->clear();        z_pz->clear();        z_e->clear();    
       top_px->clear();     top_py->clear();      top_pz->clear();      top_e->clear();  
@@ -816,22 +836,47 @@ SusyEventAnalyzer::Run()
       pGentot.SetPxPyPzE(0,0,0,0); 
 		Float_t St_gen=0;
 		Float_t St_Lept_gen=0;
+		Int_t Ngamma=0;
 		
+		for(size_t i=0; i< event.genParticles.size(); i++){
+			if(event.genParticles.at(i).pdgId==22) Ngamma++;
+		}
+		
+        float Wtopi=1;
+        float WtopiP=1;
+        float WtopiM=1;
 
+        
       for(size_t i=0; i< event.genParticles.size(); i++){
 	if(event.genParticles.at(i).status==1){
 	  pGentot+=event.genParticles.at(i).momentum;
 	}
-	
+		  if(event.genParticles.at(i).pdgId==23) hName["h_Zmass"]->Fill(event.genParticles.at(i).momentum.M()); 
+
+		  if(Ngamma==0){
+		  /*
+		  cout << "pdgId: " << event.genParticles.at(i).pdgId << " "; 
+		  cout << " E: " << event.genParticles.at(i).momentum.E();
+		  cout << " pt: " << event.genParticles.at(i).momentum.Perp(); 
+		  cout << " eta: " << event.genParticles.at(i).momentum.Eta();
+		  cout << " phi: " << event.genParticles.at(i).momentum.Phi();
+		  */
+			  if(event.genParticles.at(i).pdgId==23) hName["h_Zmass_nGamma0"]->Fill(event.genParticles.at(i).momentum.M()); 
+			  //cout << " "<< event.genParticles.at(i).momentum.M(); 
+		  
+		 // cout << endl; 
+		  }
+		  
+		  
 		if(event.genParticles.at(i).status==1 ){
-	/*
-		cout << "pdgId: " << event.genParticles.at(i).pdgId; 
-	    cout << " E: " << event.genParticles.at(i).momentum.E();
-	    cout << " pt: " << event.genParticles.at(i).momentum.Perp(); 
-	    cout << " eta: " << event.genParticles.at(i).momentum.Eta();
-	    cout << " phi: " << event.genParticles.at(i).momentum.Phi();
-	    cout << endl; 
-	*/		
+			/*
+				cout << "pdgId: " << event.genParticles.at(i).pdgId << " "; 
+				cout << " E: " << event.genParticles.at(i).momentum.E();
+				cout << " pt: " << event.genParticles.at(i).momentum.Perp(); 
+				cout << " eta: " << event.genParticles.at(i).momentum.Eta();
+				cout << " phi: " << event.genParticles.at(i).momentum.Phi();
+				cout << endl; 
+			*/
 			if(abs(event.genParticles.at(i).pdgId)>=11 && abs(event.genParticles.at(i).pdgId)<=16 )  {
 				St_Lept_gen+=event.genParticles.at(i).momentum.Perp();
 			}
@@ -840,6 +885,10 @@ SusyEventAnalyzer::Run()
 			
 	  }
 	
+          if(abs(event.genParticles.at(i).pdgId)==14){
+              TLorentzVector Ptau=event.genParticles.at(i).momentum;
+            //  cout << "tau pt: " << Ptau.Perp() << endl;
+          }
 	
 	if(abs(event.genParticles.at(i).pdgId)==24){
 	  //W 4 vector
@@ -862,6 +911,15 @@ SusyEventAnalyzer::Run()
 	if(abs(event.genParticles.at(i).pdgId)==6){
 	  //top 4 vector
           TLorentzVector Ptop=event.genParticles.at(i).momentum;
+        float x=Ptop.Perp();
+        if(x>400)x=400;
+        float w=TMath::Exp(0.156-0.00137*x);
+
+        Wtopi*=w;
+     //   std::cout << "top pt: " << Ptop.Perp() << " weight: " << TMath::Exp(0.156-0.00137*x) << std::endl;
+        WtopiP*=1.2*Wtopi;
+        WtopiM*=0.8*Wtopi;
+
 		  top_px->push_back(Ptop.Px());
           top_py->push_back(Ptop.Py());
           top_pz->push_back(Ptop.Pz());
@@ -870,7 +928,10 @@ SusyEventAnalyzer::Run()
 
 
       }//end gen particles loop 
-		
+        SumW_Top+=TMath::Sqrt(Wtopi);
+        SumW_TopP+=TMath::Sqrt(WtopiP);
+        SumW_TopM+=TMath::Sqrt(WtopiM);
+
 		Float_t Ht_gen=St_gen-St_Lept_gen;
 		
 		gen_st=St_gen;//for filling trees 
@@ -926,12 +987,15 @@ SusyEventAnalyzer::Run()
 					continue;
 				}  
 			}
+			//cout << "npv = " << npv << " " << endl; 
+			NumInteractions=npv;
 			std::vector<Float_t> PUWeights = GetPileUpWeight(npv);
 			puWt_nom  =  PUWeights[0];
 			puWt_up   =  PUWeights[1];
 			puWt_down =  PUWeights[2];
 		}
 		else{
+			NumInteractions=0;
 			puWt_nom  =  1.;
 			puWt_up   =  1.;
 			puWt_down =  1.;
@@ -1026,13 +1090,44 @@ SusyEventAnalyzer::Run()
 		 */
 		jet_bTagL->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.244); // loose csv working point b-tag
         jet_bTagM->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679); //medium csv working point b-tag
+		jet_bTagT->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.898); //tight csv working point b-tag
+		  jet_algFlavor->push_back(goodPfJets.at(i)->algDefFlavour); 
+		  jet_phyFlavor->push_back(goodPfJets.at(i)->phyDefFlavour); 
+
+		//cout << "alg flavor: " << goodPfJets.at(i)->algDefFlavour << endl; 
+		//  bool TAG=goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679;
+		//  cout << "b-tagged: "<< TAG << endl; 
+		//cout << "phy flavor: " << goodPfJets.at(i)->phyDefFlavour << endl; 
       }
 
       if (metV.Mod() > met_etCut)
         tempSt += metV.Mod();
 
       st = tempSt;
+/*
+		if(muon_e->size()>=1 && electron_e->size()>=1 && loose_electron_e->size()!=electron_e->size() && loose_muon_e->size()!=muon_e->size()){
+			cout << "Nmu: "<< muon_e->size() << " NEl: " << electron_e->size() << endl;  
+			int nGenMu=0;
+			int nGenEl=0;
+			for(size_t i=0; i< event.genParticles.size(); i++){
+				
+				if(event.genParticles.at(i).status==1){
+					cout << "pdgId: " << event.genParticles.at(i).pdgId << " "; 
+					cout << " E: " << event.genParticles.at(i).momentum.E();
+					cout << " pt: " << event.genParticles.at(i).momentum.Perp(); 
+					cout << " eta: " << event.genParticles.at(i).momentum.Eta();
+					cout << " phi: " << event.genParticles.at(i).momentum.Phi();
+					cout << endl; 
+					if(abs(event.genParticles.at(i).pdgId)==11) nGenEl++;
+					if(abs(event.genParticles.at(i).pdgId)==13) nGenMu++;
 
+				}
+			}
+			cout << "nGenEl: " << nGenEl << " nGenMu: " << nGenMu << endl; 
+			cout << endl; 
+			
+		}			
+ */
 		//cout << "RECO st: " << st << " ht: " << tempHt << endl << endl; 	
 		
       //      cout << "jet px: "<< jet_px->size() << " jet_unc: " << jet_unc->size() << endl; 
@@ -1046,9 +1141,11 @@ SusyEventAnalyzer::Run()
     }
 
     ////////// END OF EVENT LOOP //////////
-
+	  hName["h_Nevents"]->SetBinContent(1,nCnt[0]); 
     out << " -------------------- Job Summary -------------------- "                                                                  << std::endl;
     out << " Total events                                                 : " << nCnt [0]                                             << std::endl;
+    out << " Sum Top weights                                                : " << SumW_Top << " +/ " << SumW_TopP << " " << SumW_TopM <<  std::endl;
+
     if (nCnt[0] >= 1) {
       out << " passed preselection                                        : " << nCnt [1] << " (" << nCnt [1] / float(nCnt[0]) << ")" << std::endl;
       out << " tightMuons     >= 1                                        : " << nCnt [2] << " (" << nCnt [2] / float(nCnt[1]) << ")" << std::endl;

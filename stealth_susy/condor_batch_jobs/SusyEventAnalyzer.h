@@ -112,6 +112,7 @@ protected:
   Float_t gen_st, gen_ht;
 	
   Float_t puWt_nom,		puWt_up,	puWt_down;
+  Int_t NumInteractions;
 
   std::vector<float>* muon_e; // tight muons 
   std::vector<float>* muon_px;
@@ -147,6 +148,10 @@ protected:
   std::vector<float>* jet_pz;
   std::vector<bool>*  jet_bTagL;
   std::vector<bool>*  jet_bTagM;
+  std::vector<bool>*  jet_bTagT;
+  std::vector<int>*  jet_algFlavor;
+  std::vector<int>*  jet_phyFlavor;
+
   std::vector<float>* jet_unc;
 
   std::vector<float>* w_px;
