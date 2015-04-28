@@ -19,6 +19,7 @@ void analyze_trees(int jobnumber){
 	
 	divide_BW();
 	writeHisto();
+	gSystem->Exit(1,1); 
 }
 
 void initialize_tree(TChain *tree){
@@ -161,8 +162,7 @@ void fill_event_category(){
 
     if(ist==0) cout << "ist is 0" << endl;
     
-    int NB=nTightBJets;
-    if(NB>=2) NB=2;
+
 
     
     TString scales[]={"_noSF","_SF","_SFP","_SFM","_SFPbc","_SFPl","_SFMbc","_SFMl","_TopCor","_TopCorP","_TopCorM"};
@@ -170,21 +170,45 @@ void fill_event_category(){
     
     std::map<TString,double> event_weight;
     event_weight["_noSF"]=weight;
-    event_weight["_SF"]=weight*B_weight_tight;
-    event_weight["_SFP"]=weight*B_weight_tightP;
-    event_weight["_SFM"]=weight*B_weight_tightM;
-    event_weight["_SFPbc"]=weight*B_weight_tightPbc;
-    event_weight["_SFMbc"]=weight*B_weight_tightMbc;
     
-    event_weight["_SFPl"]=weight*B_weight_tightPl;
-    event_weight["_SFMl"]=weight*B_weight_tightMl;
+    event_weight["_SF"]=weight*B_weight;
+    event_weight["_SFP"]=weight*B_weightP;
+    event_weight["_SFM"]=weight*B_weightM;
+    event_weight["_SFPbc"]=weight*B_weightPbc;
+    event_weight["_SFMbc"]=weight*B_weightMbc;
+    
+    event_weight["_SFPl"]=weight*B_weightPl;
+    event_weight["_SFMl"]=weight*B_weightMl;
     
     event_weight["_TopCor"]=weight*TTbar_corr*B_weight_tight;
     event_weight["_TopCorP"]=weight*TTbar_corrP*B_weight_tight;
     event_weight["_TopCorM"]=weight*TTbar_corrM*B_weight_tight;
+    
+	event_weight["_tight_noSF"]=weight; 
+	
+    event_weight["_tight_SF"]=weight*B_weight_tight;
+    event_weight["_tight_SFP"]=weight*B_weight_tightP;
+    event_weight["_tight_SFM"]=weight*B_weight_tightM;
+    event_weight["_tight_SFPbc"]=weight*B_weight_tightPbc;
+    event_weight["_tight_SFMbc"]=weight*B_weight_tightMbc;
+    
+    event_weight["_tight_SFPl"]=weight*B_weight_tightPl;
+    event_weight["_tight_SFMl"]=weight*B_weight_tightMl;
+    
+    event_weight["_tight_TopCor"]=weight*TTbar_corr*B_weight_tight;
+    event_weight["_tight_TopCorP"]=weight*TTbar_corrP*B_weight_tight;
+    event_weight["_tight_TopCorM"]=weight*TTbar_corrM*B_weight_tight;
+    
+    TString tag[]={"","_tight"};
+    int Ntag=sizeof(tag)/sizeof(TString);
 
-    for(int i=0; i<Nscale; i++){
-        for(int j=1; j<=ist; j++){
+    for(int itag=0; itag<Ntag; itag++){
+        int NB=nBJets;
+        if(tag[itag]=="_tight") NB=nTightBJets;
+        if(NB>2)NB=2;
+        
+        for(int i=0; i<Nscale; i++){
+            for(int j=1; j<=ist; j++){
             int iBin=0;
             if(j==1) iBin=nJets;
             if(j==2) iBin=nJets+nJetmax;
@@ -193,15 +217,15 @@ void fill_event_category(){
             if(tt_enriched) {
                 sumW_EMu+=TTbar_corr;
                 sum_EMu+=1;
-                hName[Form("EventCategories_1Mu_1El_%dbtag_tight",NB)+scales[i]]->Fill(iBin,event_weight[scales[i]]);
+                hName[Form("EventCategories_1Mu_1El_%dbtag",NB) + tag[itag] + scales[i]]->Fill(iBin,event_weight[tag[itag]+scales[i]]);
             }
-            if(Z_enriched_loose) hName[Form("EventCategories_2Mu_onZ_%dbtag_tight",NB)+scales[i]]->Fill(iBin,event_weight[scales[i]]);
-            if(sig_2mu) hName[Form("EventCategories_2Mu_offZ_%dbtag_tight",NB)+scales[i]]->Fill(iBin,event_weight[scales[i]]);
+            if(Z_enriched_loose) hName[Form("EventCategories_2Mu_onZ_%dbtag",NB)+tag[itag]+scales[i]]->Fill(iBin,event_weight[tag[itag]+scales[i]]);
+            if(sig_2mu) hName[Form("EventCategories_2Mu_offZ_%dbtag",NB)+tag[itag]+scales[i]]->Fill(iBin,event_weight[tag[itag]+scales[i]]);
         }//ist loop for insclusive bin
 
     }
   
-    
+    }
 }
 
 TString create_category(int nJ, bool inclusive, int Nmu, int Nel, int charge, int Nb, TString tag, TString sf, TString mass){
@@ -274,24 +298,34 @@ void bookHisto(){
 	float ht_bins[]={0,200,300,450,600,750,1000,3000};
 	int Nht=sizeof(ht_bins)/sizeof(float)-1;
 	
-	float Xbins[]={0,30,50,100,250,400,1500};
+	float Xbins[]={0,30,50,100,150,250,350,600,800,1500};
 	int NX=sizeof(Xbins)/sizeof(float)-1;
 	
 	float hMumu_bins[]={0,50,60,70,80,85,90,95,100,105,110,115,120,130,140,160,180,210,260,310,500,800};
 	int NHmumu=sizeof(hMumu_bins)/sizeof(float)-1;
 	
-    string scales[]={"_noSF","_SF","_SFP","_SFM","_SFPbc","_SFPl","_SFMbc","_SFMl","_TopCor","_TopCorP","_TopCorM"};
-    int Nscale=11;
+    string scales[]={"_noSF","_SF","_SFP","_SFM","_SFPbc","_SFPl","_SFMbc","_SFMl","_TopCor","_TopCorP","_TopCorM","_tight_noSF","_tight_SF","_tight_SFP","_tight_SFM","_tight_SFPbc","_tight_SFPl","_tight_SFMbc","_tight_SFMl","_tight_TopCor","_tight_TopCorP","_tight_TopCorM"};
+    int Nscale=sizeof(scales)/sizeof(string);
     for(int nb=0; nb<=2; nb++){
-        for(int is=0; is<Nscale; is++)CreateHistogram(Form("EventCategories_1Mu_1El_%dbtag_tight%s",nb,scales[is].c_str()),"","","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
-        for(int is=0; is<Nscale; is++)CreateHistogram(Form("EventCategories_2Mu_offZ_%dbtag_tight%s",nb,scales[is].c_str()),"","","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
-        for(int is=0; is<Nscale; is++)CreateHistogram(Form("EventCategories_2Mu_onZ_%dbtag_tight%s",nb,scales[is].c_str()),"","","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
+        TString title=Form("#mu,e, %d-btags",nb);
+        if(nb==2)title=Form("#mu,e, #geq %d-btags",nb);
+
+
+        for(int is=0; is<Nscale; is++){
+			TString sc=scales[is];
+			if(sc.Contains("tight")) title=title+" tight";
+			CreateHistogram(Form("EventCategories_1Mu_1El_%dbtag%s",nb,scales[is].c_str()),title,"","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
+			CreateHistogram(Form("EventCategories_2Mu_offZ_%dbtag%s",nb,scales[is].c_str()),title,"","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
+			CreateHistogram(Form("EventCategories_2Mu_onZ_%dbtag%s",nb,scales[is].c_str()),title,"","Events",(nJetmax)*3,0.5,nJetmax*3+0.5);
+		}
         
         int nJ=1;
-        for(int i=1; i<=hName[Form("EventCategories_1Mu_1El_%dbtag_tight_SF",nb)]->GetNbinsX();i++){
-           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_1Mu_1El_%dbtag_tight%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,Form("%d",nJ));
-           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_2Mu_offZ_%dbtag_tight%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,Form("%d",nJ));
-           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_2Mu_onZ_%dbtag_tight%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,Form("%d",nJ));
+        for(int i=1; i<=hName[Form("EventCategories_1Mu_1El_%dbtag_noSF",nb)]->GetNbinsX();i++){
+            TString binLabel=Form("%d",nJ);
+            if(nJ==nJetmax)binLabel=Form("#geq %d",nJ);
+           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_1Mu_1El_%dbtag%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,binLabel);
+           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_2Mu_offZ_%dbtag%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,binLabel);
+           for(int is=0; is<Nscale; is++) hName[Form("EventCategories_2Mu_onZ_%dbtag%s",nb,scales[is].c_str())]->GetXaxis()->SetBinLabel(i,binLabel);
 
             nJ++;
             if(nJ>nJetmax)nJ=1;
@@ -299,6 +333,7 @@ void bookHisto(){
 
     }
     
+
 	CreateHistogram("gen_top_pt","","p_{T}(t) [GeV]", "Events", 50,0,1000);
 	CreateHistogram("gen_top_pt_reweighted","","p_{T}(t) [GeV]", "Events", 50,0,1000);
     
@@ -313,9 +348,6 @@ void bookHisto(){
 
     CreateHistogram("deltaPhi_M","#Delta #Phi (bb RF) vs M(bb)","M_{bb} [GeV]","#Delta #Phi",100,0,1000,20,0,3.14);
     CreateHistogram("M_bb","#Delta #Phi (bb RF) vs M(bb)","M_{bb} [GeV]","Events",100,0,1000);
-
-	CreateHistogram("ToyStudy_nJet2_1Mu_1El_0btag","","","",1000,0,1000);
-    CreateHistogram("ToyStudy_nJet2_1Mu_1El_2btag","","","",1000,0,1000);
     
     
     CreateHistogram("Acceptance_num_0b_st_nJets_1Mu_1El","#mu=1","S_{T} [GeV]","n-jets",N,Dst_bins,8,0.5,8.5);
@@ -339,11 +371,29 @@ void bookHisto(){
 	CreateHistogram("st_nJets_Z","Z","S_{T} [GeV]","n-jets",N,Dst_bins,8,0.5,8.5);
 	CreateHistogram("st_nJets_tt","tt","S_{T} [GeV]","n-jets",N,Dst_bins,8,0.5,8.5);
 
-    for(int ib=0; ib<=2; ib++)CreateHistogram(Form("st_1Mu_1El_%dbtag",ib),"#mu,e","S_{T} [GeV]","S_{T} [GeV]",N,st_bins);
-    for(int ib=0; ib<=2; ib++)CreateHistogram(Form("st_1Mu_1El_%dbtag_TopCor",ib),"#mu,e","S_{T} [GeV]","S_{T} [GeV]",N,st_bins);
+    for(int ib=0; ib<=2; ib++){
+        CreateHistogram(Form("st_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","S_{T} [GeV]","Events",N,st_bins);
+        CreateHistogram(Form("st_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","S_{T} [GeV]","Events",N,st_bins);
+        
+        CreateHistogram(Form("st_1Mu_1El_%dbtag_SF",ib),"#mu,e","S_{T} [GeV]","Events",N,st_bins);
+        CreateHistogram(Form("st_1Mu_1El_%dbtag_TopCor",ib),"#mu,e","S_{T} [GeV]","Events",N,st_bins);
+        
+        CreateHistogram(Form("met_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        CreateHistogram(Form("met_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        
+        CreateHistogram(Form("bjet1pt_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        CreateHistogram(Form("bjet1pt_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        
+        CreateHistogram(Form("bjet2pt_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        CreateHistogram(Form("bjet2pt_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","S_{T} [GeV]","Events",NX,Xbins);
+        
+        CreateHistogram(Form("ptmu_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","p_{T}(#mu) [GeV]","Events",NX,Xbins);
+        CreateHistogram(Form("ptmu_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","p_{T}(#mu) [GeV]","Events",NX,Xbins);
 
+        CreateHistogram(Form("pte_1Mu_1El_%dbtag_tight_SF",ib),"#mu,e","p{T}(e) [GeV]","Events",NX,Xbins);
+        CreateHistogram(Form("pte_1Mu_1El_%dbtag_tight_TopCor",ib),"#mu,e","p{T}(e) [GeV]","Events",NX,Xbins);
 
-	CreateHistogram("reconstructedZ","","M_{#mu#mu}","Events",100,0,200);
+    }
 	
 	
 	CreateHistogram("h_wpt","w p_{T}", "p_{T} [GeV]", "Events", 50,0,400); 
@@ -933,7 +983,7 @@ void bookHisto(){
 		for(int nJ=0; nJ<=nJetmax; nJ++){
 			
 			CreateHistogram(Form("nJets%d_DeltaPhiMuonMet_%dMu",nJ,mu),"#Delta #phi","#Delta #phi(#mu,M_{ET})","Events",20,0,3.15); 
-			CreateHistogram(Form("nJets%d_muonpT%d",nJ,mu),Form("#mu=%d",mu), "p_{T}(#mu) [GeV]","Events",75,0,1500); 
+			//CreateHistogram(Form("nJets%d_muonpT%d",nJ,mu),Form("#mu=%d",mu), "p_{T}(#mu) [GeV]","Events",75,0,1500);
 			CreateHistogram(Form("jetpT%d_%dMu",nJ,mu),Form("Jet p_{T} spectrum for %dth jet",nJ),"Jet p_{T} [GeV]","Events",300,0,1500);			
 
 			CreateHistogram(Form("st_nJets%d_%dMu_uW",nJ,mu),Form("%d jets, %d#mu",nJ,mu),"S_{T} [GeV]","Events",N,st_bins);
@@ -1143,6 +1193,7 @@ double get_eff(double pt, double eta, TString mode){
 
 void load_btagEff(){
 	TString file_name="/eos/uscms/store/user/btcarlso/efficiencies/efficiency_file_"+output_file_name+".root"; 
+	if(test)file_name="/eos/uscms/store/user/btcarlso/efficiencies/efficiency_file_ttbar.root";
 	fBtagEff = new TFile(file_name,"READ"); 
 	
 	TH1F *h=(TH1F*)fBtagEff->FindObjectAny("TEfficiency_names"); 
@@ -1195,6 +1246,12 @@ void efficiency(){
         int ieta=hName["sfTIGHT_x"]->FindBin(TMath::Abs(pE.Eta()));
         int ipt=hName["sfTIGHT_y"]->FindBin(TMath::Abs(pE.Perp()));
 
+        int Nx_=hName["sfTIGHT_x"]->GetNbinsX();
+        int Ny_=hName["sfTIGHT_x"]->GetNbinsY();
+
+        if(ieta>Nx_) ieta=Nx_;
+        if(ieta>Ny_) ipt=Ny_;
+        
         SFele=hName2D["sfTIGHT"]->GetBinContent(ieta,ipt);//tight id electron sf
         
     }
@@ -1548,9 +1605,28 @@ void fill_st(){
         
         hName[Form("weight_nJets%d_1Mu_1El_%dbtag_tight",nJets,NBT)]->Fill(B_weight_tight);
 		
-        hName[Form("st_1Mu_1El_%dbtag_TopCor",NBT)]->Fill(st,weight*B_weight_tight*TTbar_corr);
-        hName[Form("st_1Mu_1El_%dbtag",NBT)]->Fill(st,weight*B_weight_tight);
+        hName[Form("st_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(st,weight*B_weight_tight*TTbar_corr);
+        hName[Form("st_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(st,weight*B_weight_tight);
 
+        hName[Form("st_1Mu_1El_%dbtag_TopCor",NBT)]->Fill(st,weight*B_weight*TTbar_corr);
+        hName[Form("st_1Mu_1El_%dbtag_SF",NBT)]->Fill(st,weight*B_weight);
+        
+        hName[Form("met_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(met,weight*B_weight_tight);
+        hName[Form("met_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(met,weight*B_weight_tight*TTbar_corr);
+        
+        hName[Form("bjet1pt_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(pTbjet1,weight*B_weight_tight);
+        hName[Form("bjet2pt_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(pTbjet2,weight*B_weight_tight);
+        
+        hName[Form("bjet1pt_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(pTbjet1,weight*B_weight_tight*TTbar_corr);
+        hName[Form("bjet2pt_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(pTbjet2,weight*B_weight_tight*TTbar_corr);
+
+        hName[Form("ptmu_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(pTmuon1,weight*B_weight_tight);
+        hName[Form("ptmu_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(pTmuon1,weight*B_weight_tight*TTbar_corr);
+
+        hName[Form("pte_1Mu_1El_%dbtag_tight_SF",NBT)]->Fill(pTElectron1,weight*B_weight_tight);
+        hName[Form("pte_1Mu_1El_%dbtag_tight_TopCor",NBT)]->Fill(pTElectron1,weight*B_weight_tight*TTbar_corr);
+        
+        
 		hName[Form("st_nJets%d_1Mu_1El_%dbtag",nJets,NB)]->Fill(st,weight);//first make plots without scale factors
 		hName[Form("st_nJets%d_1Mu_1El_%dbtag_tight",nJets,NBT)]->Fill(st,weight); 	
 		
@@ -1837,6 +1913,9 @@ void nBtag(){
     
     for(int ib=0; ib<btagged.size();ib++){
         pJi.SetPxPyPzE(jet_px->at(ib),jet_py->at(ib),jet_pz->at(ib),jet_e->at(ib));
+        pTbjet1=pJi.Perp();
+        pTbjet2=pJi.Perp();
+        
         for(int jb=ib+1; jb<btagged.size();jb++){
             if(ib==jb)continue;
             TLorentzVector pJj;
@@ -1893,7 +1972,7 @@ void fill_muon(){
 		int mu=imu+1;
 		if(mu>2) continue; 
 		pM.SetPxPyPzE(muon_px->at(imu),muon_py->at(imu),muon_pz->at(imu),muon_e->at(imu)); 
-		hName[Form("nJets%d_muonpT%d",nJets,mu)]->Fill(pM.Perp(),weight); 
+		//hName[Form("nJets%d_muonpT%d",nJets,mu)]->Fill(pM.Perp(),weight);
 	}
 }
 
@@ -2091,7 +2170,8 @@ void control_regions(){
 	}
 	if(tt_enriched || tt_enriched_btag){
 		pM1.SetPxPyPzE(muon_px->at(0),muon_py->at(0),muon_pz->at(0),muon_e->at(0)); 
-		pM2.SetPxPyPzE(electron_px->at(0),electron_py->at(0),electron_pz->at(0),electron_e->at(0)); 
+		pM2.SetPxPyPzE(electron_px->at(0),electron_py->at(0),electron_pz->at(0),electron_e->at(0));
+        pTElectron1=pM2.Perp();
 		pM1+=pM2;
 		pTmuon2=pM2.Perp();
 		dilepton_pt=pM1.Perp();
@@ -2396,12 +2476,13 @@ double getSF(int ijet, TString Atagger, TString sys){
     double x=pJi.Perp();
     int pt_bin=hName["btag_systematic_medium"]->FindBin(x);
     if(pt_bin>hName["btag_systematic_medium"]->GetNbinsX())pt_bin=hName["btag_systematic_medium"]->GetNbinsX();
+ /*
     double SFb = (0.938887+(0.00017124*x))+(-2.76366e-07*(x*x));// Scale factor for medium CSV b-tags
     double SFb_sys=hName["btag_systematic_medium"]->GetBinContent(pt_bin);
     double SFb_sysT=hName["btag_systematic_tight"]->GetBinContent(pt_bin);
     
     double SFb_tight = (0.927563+(1.55479e-05*x))+(-1.90666e-07*(x*x)); // scale factor for tight CSV b-tags
-    
+    */
     double SF=0;
     double SFsys=0;
     int flv=TMath::Abs(jet_algFlavor->at(ijet));
@@ -2668,6 +2749,12 @@ void kinematics(){
     B_weight_tightPl=LT[0];
     B_weight_tightMl=LT[1];
     
+    B_weightPbc=H[0];
+    B_weightMbc=H[1];
+    
+    B_weightPl=L[0];
+    B_weightMl=L[1];
+    
 	//cout << "B_weight: " << B_weight << " + " << B_weight_sys[0] << " - " << B_weight_sys[1] << endl;
 	//cout << "B_weight_tight: " << B_weight_tight << " + " << B_weight_sys_tight[0] << " - " << B_weight_sys_tight[1] << endl;
 
@@ -2691,8 +2778,7 @@ void kinematics(){
 		pM1.SetPxPyPzE(muon_px->at(0),muon_py->at(0),muon_pz->at(0),muon_e->at(0)); 
 		pM2.SetPxPyPzE(muon_px->at(1),muon_py->at(1),muon_pz->at(1),muon_e->at(1)); 
 		pM1+=pM2;
-		dimuon_mass=pM1.M(); 
-		if(zP.M()>81 && zP.M()<101) hName["reconstructedZ"]->Fill(dimuon_mass,weight);
+		dimuon_mass=pM1.M();
 	}
 	st=calcSt();
 	control_regions();
@@ -3144,6 +3230,7 @@ void event_loop(TChain *tree){
 		count_electrons();
 		weight=W; 
 		//cout << "weight before eff: " << weight << endl; 
+	
 		efficiency(); 
 		pileup_reweight();
         btag_SW.Start(kFALSE);
@@ -3164,10 +3251,10 @@ void event_loop(TChain *tree){
 		kinematics();
         kinematics_SW.Stop();
         
-        fill_bjet_mu_mass();
+        //fill_bjet_mu_mass();
 		if(basic_selections()==false) continue; 
 		
-		fill_jets();
+		//fill_jets();
 		fill_muon(); 
 		fill_pileup();
 
@@ -3176,11 +3263,17 @@ void event_loop(TChain *tree){
         fill_st_SW.Stop();
         
         fill_event_category();
-
+		
+		/*
+		kinematics();
+		basic_selections(); 
+		nBtag();
+		acceptance(); 
+		 */
         //fill_categories();
 		
 	}
-    
+    cout << "acceptance: " << Nacc << endl; 
     
     double Tbc=hName[Form("nJets_1Mu_1El_%dbtag_tight_SFP_bc",0)]->GetBinContent(2)/hName[Form("nJets_1Mu_1El_%dbtag_tight_SFP_bc",2)]->GetBinContent(2);
     double Tl=hName[Form("nJets_1Mu_1El_%dbtag_tight_SFP_l",0)]->GetBinContent(2)/hName[Form("nJets_1Mu_1El_%dbtag_tight_SFP_l",2)]->GetBinContent(2);
@@ -3189,13 +3282,13 @@ void event_loop(TChain *tree){
 
     double TE=TMath::Sqrt(TMath::Power(Tbc-T,2)+TMath::Power(Tl-T,2));
     
-    cout << "SumW: " << sumW_EMu << "  Nevents: " << sum_EMu << endl;
+   // cout << "SumW: " << sumW_EMu << "  Nevents: " << sum_EMu << endl;
     
     //cout << "T : " << T << " TE: " << TE << " My method: "<< (TE_-T) << endl;
     
     total.Stop();
-	cout << "fill st: " << fill_st_SW.CpuTime() << endl;
-	cout << "fill kin: " << kinematics_SW.CpuTime() << endl;
+//	cout << "fill st: " << fill_st_SW.CpuTime() << endl;
+//	cout << "fill kin: " << kinematics_SW.CpuTime() << endl;
  /*   cout << "kinematics: " << stopwatch["kinematics"].CpuTime() << endl;
     cout << "kinematics lorentz vectors: " << stopwatch["kinematics_fillLor"].CpuTime() << endl;
     cout << "kinematics SF: " << stopwatch["kinematics_SF"].CpuTime() << endl;
@@ -3203,9 +3296,15 @@ void event_loop(TChain *tree){
     cout << "getSF fill Lor: " << stopwatch["getSF_fillLor"].CpuTime()<<endl;
     cout << "SF_light: " << stopwatch["SF_light"].CpuTime() << endl;*/
 
-    cout << "gen_pt: " << gen_pt_SW.CpuTime() << endl;
-    cout << "btag: " <<btag_SW.CpuTime() << endl;
-    cout << "total time: " << total.CpuTime() << endl;
+//   cout << "gen_pt: " << gen_pt_SW.CpuTime() << endl;
+ //   cout << "btag: " <<btag_SW.CpuTime() << endl;
+ //   cout << "total time: " << total.CpuTime() << endl;
+}
+
+void acceptance(){
+	if(tt_enriched && nBJets==0 && nJets>=4){
+		Nacc+=1./NG; 
+	}
 }
 
 void analyze_file(TString folder){
@@ -3226,11 +3325,14 @@ void analyze_file(TString folder){
 		FN_i=FN_i+Form("/hist_analysis_%d.root",ii); 
 		cout << "FN_i: "<< FN_i << endl; 
 		TFile *f=new TFile(FN_i,"READ"); 
+		cout << "Get number of events: " ; 
 		TH1F *h=(TH1F*)f->Get("h_Nevents");
 		NGEN+=h->GetBinContent(1); 
+		//cout << "N: " << h->GetBinContent(1) << endl; 
 		delete h;
 		delete f; 
 	}
+	NG=NGEN; 
 	cout << "Actual number processed: " << NGEN << endl; 
 	
 	if(_MC) weight=weight/NGEN;
@@ -3311,6 +3413,21 @@ void initialize(){
 	Ngen["dy3Jets"]=11015445;
 	Ngen["dy4Jets"]=6402827;
 	
+	xs["dyJets_matchingdown"]=3403.08;
+	xs["dyJets_matchingup"]=3462.15;
+	xs["dyJets_scaledown"]=3933.66;
+	xs["dyJets_scaleup"]=3508.47;
+
+	Ngen["dyJets_matchingdown"]=1;
+	Ngen["dyJets_matchingup"]=1;
+	Ngen["dyJets_scaledown"]=1; 
+	Ngen["dyJets_scaleup"]=1;
+	
+	fileName["dyJets_matchingdown"]="dyJets_matchingdown";
+	fileName["dyJets_matchingup"]="dyJets_matchingup";
+	fileName["dyJets_scaledown"]="dyJets_scaledown"; 
+	fileName["dyJets_scaleup"]="dyJets_scaleup";
+	
 	xs["ttSemiLept"]=107.6;
 	xs["ttFullLept"]=25.6;
 	
@@ -3321,6 +3438,22 @@ void initialize(){
 	Ngen["ttFullLept"]=12119013-630000;
 	
 	
+	xs["ttJets_matchingdown"]=243.44;
+	xs["ttJets_matchingup"]=248.86;
+	xs["ttJets_scaledown"]=411.16;
+	xs["ttJets_scaleup"]=176.19;
+
+	Ngen["ttJets_matchingdown"]=1;
+	Ngen["ttJets_matchingup"]=1;
+	Ngen["ttJets_scaledown"]=1;
+	Ngen["ttJets_scaleup"]=1;
+	
+	fileName["ttJets_matchingdown"]="ttJets_matchingdown";
+	fileName["ttJets_matchingup"]="ttJets_matchingup";
+	fileName["ttJets_scaledown"]="ttJets_scaledown";
+	fileName["ttJets_scaleup"]="ttJets_scaleup";
+	
+
 	xs["ttG"]=25.24;
 	Ngen["ttG"]=1719954;
 	fileName["ttG"]="ttGJets";
@@ -3398,6 +3531,22 @@ void initialize(){
 	fileName["stealth_300_200"]="stealth_300_200"; 
 	xs["stealth_300_200"]=0.543*19828.3/1000;
 	Ngen["stealth_300_200"]=238886;
+	
+	fileName["stealth_400_200"]="stealth_400_200"; 
+	xs["stealth_400_200"]=0.543*3.54338;
+	Ngen["stealth_400_200"]=238886;
+	
+	fileName["stealth_500_300"]="stealth_500_300"; 
+	xs["stealth_500_300"]=0.543*847.051/1000; 
+	Ngen["stealth_500_300"]=239562;
+	
+	fileName["stealth_600_300"]="stealth_600_300"; 
+	xs["stealth_600_300"]=0.543*0.244862; 
+	Ngen["stealth_600_300"]=239562;
+	
+	fileName["stealth_700_400"]="stealth_700_400"; 
+	xs["stealth_700_400"]=0.543*0.0799667; 
+	Ngen["stealth_700_300"]=239562;
 	
 	fileName["stealth_500_400"]="stealth_500_400"; 
 	xs["stealth_500_400"]=0.543*847.051/1000; 
@@ -3512,12 +3661,11 @@ void setup_files(int jobnumber){
 
 	if(jobnumber==-1){
 	//test job, not standard 
-		sample_list.push_back("ttSemiLept"); 
-		sample_list.push_back("ttFullLept"); 
-
+		sample_list.push_back("stealth_300_200"); 
+		test=true;
 		_MC=true;
-		output_file_name="test";
-		selections="_trigger";
+		output_file_name="stealth_300_200_LeptonCut_15_15";
+		selections="_ptmu15_pte15";
 		
 	}
 	
@@ -3527,16 +3675,8 @@ void setup_files(int jobnumber){
 		output_file_name="singleMu"; 
 		selections="_trigger";
 	}
+
 	if(jobnumber==1) {
-		for(int nJ=1; nJ<=4; nJ++) {
-			TString tag=Form("w%dJets",nJ);
-			sample_list.push_back(tag); 
-		}
-		_MC=true; 
-		output_file_name="wJets"; 
-		selections="_trigger";
-	}
-	if(jobnumber==2) {
 		for(int nJ=1; nJ<=4; nJ++) {
 			TString tag=Form("dy%dJets",nJ);
 			sample_list.push_back(tag); 
@@ -3546,8 +3686,53 @@ void setup_files(int jobnumber){
 		selections="_trigger";
 
 	}
+	//dy systematics
+	if(jobnumber==2) {
+		sample_list.push_back("dyJets_scaleup"); 
+		
+		_MC=true; 
+		output_file_name="dyJets_scaleup"; 
+		selections="_trigger";
+		
+	}
 	
 	if(jobnumber==3) {
+		sample_list.push_back("dyJets_scaledown"); 
+		
+		_MC=true; 
+		output_file_name="dyJets_scaledown"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==4) {
+		sample_list.push_back("dyJets_matchingup"); 
+		
+		_MC=true; 
+		output_file_name="dyJets_matchingup"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==5) {
+		sample_list.push_back("dyJets_matchingdown"); 
+		
+		_MC=true; 
+		output_file_name="dyJets_matchingdown"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==6) {
+		sample_list.push_back("dyJets_scaleup"); 
+		
+		_MC=true; 
+		output_file_name="dyJets_scaleup"; 
+		selections="_trigger";
+		
+	}
+	//ttbar semi+fully leptonic
+	if(jobnumber==7) {
 		sample_list.push_back("ttSemiLept"); 
 		sample_list.push_back("ttFullLept"); 
 		//sample_list.push_back("ttG"); 
@@ -3557,82 +3742,248 @@ void setup_files(int jobnumber){
 		selections="_trigger";
 
 	}
-	if(jobnumber==22) {
+	
+	if(jobnumber==8) {
 		sample_list.push_back("ttSemiLept"); 
-		//sample_list.push_back("ttG"); 
-		
+			
 		_MC=true; 
 		output_file_name="ttSemiLept"; 
 		selections="_trigger";
-		
+
 	}
-	if(jobnumber==23) {
+	if(jobnumber==9) {
 		sample_list.push_back("ttFullLept"); 
-		//sample_list.push_back("ttG"); 
+		
 		_MC=true; 
 		output_file_name="ttFullLept"; 
 		selections="_trigger";
+
+	}
+	if(jobnumber==10) {
+		sample_list.push_back("ttJets_scaleup"); 
 		
-	}	
-	if(jobnumber==24) {
-		sample_list.push_back("w1Jets"); 
-		//sample_list.push_back("ttG"); 
+		_MC=true; 
+		test=true;
+		output_file_name="ttJets_scaleup"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==11) {
+		sample_list.push_back("ttJets_scaledown"); 
+		
+		_MC=true; 
+		output_file_name="ttJets_scaledown"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==12) {
+		sample_list.push_back("ttJets_matchingup"); 
+		
+		_MC=true; 
+		output_file_name="ttJets_matchingup"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==13) {
+		sample_list.push_back("ttJets_matchingdown"); 
+		
+		_MC=true; 
+		output_file_name="ttJets_matchingdown"; 
+		selections="_trigger";
+		
+	}
+	
+	
+	if(jobnumber==14) {
+		sample_list.push_back("QCD_30-50"); 
+		sample_list.push_back("QCD_50-80");
+		sample_list.push_back("QCD_80-120");
+		sample_list.push_back("QCD_120-170");
+		sample_list.push_back("QCD_170-300");
+		sample_list.push_back("QCD_300-470");
+		sample_list.push_back("QCD_470-600");
+		sample_list.push_back("QCD_600-800");
+		sample_list.push_back("QCD_800-1000");
 
 		_MC=true; 
-		output_file_name="w1Jets"; 
+		output_file_name="QCD"; 
+		selections="_trigger";
+		
+	}
+		
+
+	if(jobnumber==15){
+		sample_list.push_back("TBar_t");
+		sample_list.push_back("TBar_s");
+		sample_list.push_back("TBar_tW");
+		
+		sample_list.push_back("T_t");
+		sample_list.push_back("T_s");
+		sample_list.push_back("T_tW");
+		_MC=true; 
+		output_file_name = "singleTop"; 
+		selections="_trigger"; 
+
+	}
+	
+	if(jobnumber==16){	
+		sample_list.push_back("WWJetsTo2L2Nu");
+		sample_list.push_back("WZJetsTo2L2Q");
+		sample_list.push_back("WZJetsTo3LNu");
+		sample_list.push_back("WZJetsTo2QLNu");
+		
+		sample_list.push_back("ZZJetsTo2L2Q");
+		sample_list.push_back("ZZJetsTo2L2Nu");
+		sample_list.push_back("ZZJetsTo4L");
+		
+		_MC=true; 
+		QCD=false;
+		output_file_name = "diboson"; 
+		selections="_trigger"; 
+		
+	}
+	//stealth
+	if(jobnumber==17) {
+		sample_list.push_back("stealth_300_200"); 
+		
+		_MC=true; 
+		output_file_name="stealth_300_200"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==18) {
+		sample_list.push_back("stealth_400_200"); 
+		
+		_MC=true; 
+		output_file_name="stealth_400_200"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==19) {
+		sample_list.push_back("stealth_500_300"); 
+		
+		_MC=true; 
+		output_file_name="stealth_500_300"; 
+		selections="_trigger";
+		
+	}
+	
+	
+	if(jobnumber==20) {
+		sample_list.push_back("stealth_600_300"); 
+		
+		_MC=true; 
+		output_file_name="stealth_600_300"; 
+		selections="_trigger";
+		
+	}
+	if(jobnumber==21) {
+		sample_list.push_back("stealth_700_400"); 
+		
+		_MC=true; 
+		output_file_name="stealth_700_400"; 
+		selections="_trigger";
+		
+	}
+	//RPV
+	if(jobnumber==22) {
+		sample_list.push_back("RPV300"); 
+		
+		_MC=true; 
+		output_file_name="RPV300"; 
+		selections="_trigger";
+		
+	}
+	
+	if(jobnumber==23) {
+		sample_list.push_back("RPV400"); 
+		
+		_MC=true; 
+		output_file_name="RPV400"; 
+		selections="_trigger";
+		
+	}
+	
+	
+	if(jobnumber==24) {
+		sample_list.push_back("RPV500"); 
+		
+		_MC=true; 
+		output_file_name="RPV500"; 
 		selections="_trigger";
 		
 	}
 	if(jobnumber==25) {
-		sample_list.push_back("w2Jets"); 
-		//sample_list.push_back("ttG"); 
-
+		sample_list.push_back("RPV600"); 
+		
 		_MC=true; 
-		output_file_name="w2Jets"; 
+		output_file_name="RPV600"; 
 		selections="_trigger";
 		
 	}
-	if(jobnumber==26) {
-		sample_list.push_back("w3Jets"); 
-		//sample_list.push_back("ttG"); 
 	
+	if(jobnumber==26) {
+		sample_list.push_back("RPV700"); 
+		
 		_MC=true; 
-		output_file_name="w3Jets"; 
+		output_file_name="RPV700"; 
 		selections="_trigger";
 		
 	}
+	
 	if(jobnumber==27) {
-		sample_list.push_back("w4Jets"); 
-		//sample_list.push_back("ttG"); 
-
+		sample_list.push_back("RPV800"); 
+		
 		_MC=true; 
-		output_file_name="w4Jets"; 
+		output_file_name="RPV800"; 
+		selections="_trigger";
+		
+	}
+	
+	
+	if(jobnumber==28) {
+		sample_list.push_back("RPV900"); 
+		
+		_MC=true; 
+		output_file_name="RPV900"; 
 		selections="_trigger";
 		
 	}
 	
 	if(jobnumber==29) {
-		sample_list.push_back("wJetsMatchingDown"); 
-		//sample_list.push_back("ttG"); 
-
+		sample_list.push_back("RPV1000"); 
+		
 		_MC=true; 
-		output_file_name="wMatchingDown"; 
+		output_file_name="RPV1000"; 
 		selections="_trigger";
 		
-	}
-    
+	}	
 	
-	if(jobnumber==28) {
-		sample_list.push_back("dy1Jets"); 
-		//sample_list.push_back("ttG"); 
 
+	if(jobnumber==30){
+		sample_list.push_back("UDD300");
 		_MC=true; 
-		output_file_name="dy1Jets"; 
-		selections="_trigger";
-		
+		QCD=false;
+		output_file_name="UDD300";
+		selections="_trigger"; 
 	}
 	
-	if(jobnumber==4) {
+	if(jobnumber==31) {
+		for(int nJ=1; nJ<=4; nJ++) {
+			TString tag=Form("w%dJets",nJ);
+			sample_list.push_back(tag); 
+		}
+		_MC=true; 
+		output_file_name="wJets"; 
+		selections="_trigger";
+	}
+	
+	if(jobnumber==32) {
 		for(int nJ=1; nJ<=4; nJ++) {
 			TString tag=Form("w%dJets",nJ);
 			sample_list.push_back(tag); 
@@ -3653,7 +4004,7 @@ void setup_files(int jobnumber){
 		sample_list.push_back("QCD_470-600");
 		sample_list.push_back("QCD_600-800");
 		sample_list.push_back("QCD_800-1000");
-
+		
 		
 		sample_list.push_back("TBar_t");
 		sample_list.push_back("TBar_s");
@@ -3677,205 +4028,7 @@ void setup_files(int jobnumber){
 		_MC=true; 
 		output_file_name="allMC"; 
 		selections="_trigger";
-
-	}
-	
-	if(jobnumber==5) {
-		sample_list.push_back("ttSemiLept"); 
-			
-		_MC=true; 
-		output_file_name="ttSemiLept"; 
-		selections="_trigger";
-
-	}
-	if(jobnumber==6) {
-		sample_list.push_back("ttFullLept"); 
 		
-		_MC=true; 
-		output_file_name="ttFullLept"; 
-		selections="_trigger";
-
-	}
-	if(jobnumber==7) {
-		sample_list.push_back("QCD_30-50"); 
-		sample_list.push_back("QCD_50-80");
-		sample_list.push_back("QCD_80-120");
-		sample_list.push_back("QCD_120-170");
-		sample_list.push_back("QCD_170-300");
-		sample_list.push_back("QCD_300-470");
-		sample_list.push_back("QCD_470-600");
-		sample_list.push_back("QCD_600-800");
-		sample_list.push_back("QCD_800-1000");
-
-		_MC=true; 
-		output_file_name="QCD"; 
-		selections="_trigger";
-		
-	}
-	if(jobnumber==8) {
-		sample_list.push_back("RPV300"); 
-		
-		_MC=true; 
-		output_file_name="RPV300"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==9) {
-		sample_list.push_back("RPV400"); 
-		
-		_MC=true; 
-		output_file_name="RPV400"; 
-		selections="_trigger";
-		
-	}
-	
-	
-	if(jobnumber==10) {
-		sample_list.push_back("RPV500"); 
-		
-		_MC=true; 
-		output_file_name="RPV500"; 
-		selections="_trigger";
-
-	}
-	if(jobnumber==11) {
-		sample_list.push_back("RPV600"); 
-		
-		_MC=true; 
-		output_file_name="RPV600"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==12) {
-		sample_list.push_back("RPV700"); 
-		
-		_MC=true; 
-		output_file_name="RPV700"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==13) {
-		sample_list.push_back("RPV800"); 
-		
-		_MC=true; 
-		output_file_name="RPV800"; 
-		selections="_trigger";
-		
-	}
-	
-	
-	if(jobnumber==14) {
-		sample_list.push_back("RPV900"); 
-		
-		_MC=true; 
-		output_file_name="RPV900"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==15) {
-		sample_list.push_back("RPV1000"); 
-		
-		_MC=true; 
-		output_file_name="RPV1000"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==16) {
-		sample_list.push_back("stealth_300_200"); 
-		
-		_MC=true; 
-		output_file_name="stealth_300_200"; 
-		selections="_trigger";
-		
-	}
-	if(jobnumber==17) {
-		sample_list.push_back("stealth_500_400"); 
-		
-		_MC=true; 
-		output_file_name="stealth_500_400"; 
-		selections="_trigger";
-		
-	}
-	
-	if(jobnumber==18){
-		sample_list.push_back("TBar_t");
-		sample_list.push_back("TBar_s");
-		sample_list.push_back("TBar_tW");
-		
-		sample_list.push_back("T_t");
-		sample_list.push_back("T_s");
-		sample_list.push_back("T_tW");
-		_MC=true; 
-		output_file_name = "singleTop"; 
-		selections="_trigger"; 
-
-	}
-	/*
-	if(jobnumber==19){	
-		
-		sample_list.push_back("QCD4Jet_Pt100-180"); 
-		sample_list.push_back("QCD4Jet_Pt250-400"); 
-		sample_list.push_back("QCD4Jet_Pt400-5600"); 
-
-		sample_list.push_back("QCD6Jet_Pt100-180"); 
-		sample_list.push_back("QCD6Jet_Pt180-250"); 
-		sample_list.push_back("QCD6Jet_Pt250-400"); 
-		sample_list.push_back("QCD6Jet_Pt400-5600"); 
-		
-		_MC=true; 
-		output_file_name = "output_file_QCD4Jets6Jets.root"; 
-		selections=""; 
-		
-	}
-
-	
-	if(jobnumber==20){	
-		
-		sample_list.push_back("QCD_inc"); 
-		_MC=true; 
-		QCD=true;
-		output_file_name = "output_file_QCDincl.root"; 
-		selections=""; 
-		
-	}
-	*/
-	
-	if(jobnumber==19){	
-		sample_list.push_back("WWJetsTo2L2Nu");
-		sample_list.push_back("WZJetsTo2L2Q");
-		sample_list.push_back("WZJetsTo3LNu");
-		sample_list.push_back("WZJetsTo2QLNu");
-		
-		sample_list.push_back("ZZJetsTo2L2Q");
-		sample_list.push_back("ZZJetsTo2L2Nu");
-		sample_list.push_back("ZZJetsTo4L");
-		
-		_MC=true; 
-		QCD=false;
-		output_file_name = "diboson"; 
-		selections="_trigger"; 
-		
-	}
-	
-	if(jobnumber==20){
-		sample_list.push_back("wJets_inclusive");
-		_MC=true;
-		QCD=false; 
-		output_file_name="inclusive";
-		selections="_trigger"; 
-		
-	}
-	if(jobnumber==21){
-		sample_list.push_back("UDD300");
-		_MC=true; 
-		QCD=false;
-		output_file_name="UDD300";
-		selections="_trigger"; 
 	}
 	
 }

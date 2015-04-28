@@ -22,8 +22,6 @@
 #include <TString.h>
 #include <TPRegexp.h>
 #include <TArrayI.h>
-#include <TProfile.h>
-#include <TMath.h>
 
 #include <map>
 #include <set>
@@ -63,9 +61,7 @@ public:
   Float_t SetSignalEventWeight(TString, Float_t, Float_t);
 
   void createHistogram(const char*, const char*, const char*, const char*, Int_t, Double_t, Double_t);
-  void createProfile(const char* name,   const char* title,
-                                     const char* xTitle, const char* yTitle,
-                     Int_t       nBinsX, Double_t    xLow, Double_t xUp);
+
 protected:
   bool IsGoodLumi(UInt_t, UInt_t) const;
   bool PassTriggers() const;
@@ -96,8 +92,6 @@ protected:
   mutable bool currentLumiIsGood;
 
   std::map<TString, TH1F*> hName;  // Map for histograms
-  std::map<TString, TProfile*> prName;  // Map for histograms
-
   Float_t lumiCalc;                // Luminosity used for scaling output
   Float_t nScaledEvents;           // Number of events to be used for scaling output histograms
   TString datasetName;
@@ -125,15 +119,6 @@ protected:
   std::vector<float>* muon_py;
   std::vector<float>* muon_pz;
   std::vector<float>* muon_charge;
-    
-  std::vector<float>* muon_noIso_e; // tight muons
-  std::vector<float>* muon_noIso_px;
-  std::vector<float>* muon_noIso_py;
-  std::vector<float>* muon_noIso_pz;
-  std::vector<float>* muon_noIso_charge;
-  std::vector<float>* muon_noIso_PFIso04;
-  std::vector<float>* muon_noIso_PFIso03;
-
 	
   std::vector<float>* loose_muon_e; // loose muons 
   std::vector<float>* loose_muon_px;
@@ -207,9 +192,9 @@ SusyEventAnalyzer::SusyEventAnalyzer(TTree& tree) :
 {
   event.setInput(tree);
 
-  muon1_ptCut     = 30.0;
+  muon1_ptCut     = 15.0;
   muon2_ptCut     = 15.0;
-  electron1_etCut = 30.0;
+  electron1_etCut = 15.0;
   electron2_etCut = 15.0;
   photon1_etCut   = 15.0;
   photon2_etCut   = 15.0;
@@ -512,14 +497,12 @@ SusyEventAnalyzer::IsGoodLumi(UInt_t run, UInt_t lumi) const
 bool
 SusyEventAnalyzer::PassTriggers() const
 {
-//	cout << "Trigger size: "<<	hltNames.size() << endl; 
   unsigned nT(hltNames.size());
   if(nT == 0) return true;
 
-	for(unsigned iT(0); iT != nT; ++iT){
-	  //cout << "HLT names: " << hltNames[iT] << " mapped event: " << event.hltMap.pass(hltNames[iT]) << endl; 
-	  if(event.hltMap.pass(hltNames[iT])) return true;
-	}
+  for(unsigned iT(0); iT != nT; ++iT)
+    if(event.hltMap.pass(hltNames[iT])) return true;
+
   return false;
 }
 

@@ -14,6 +14,7 @@
 #include "TVirtualFitter.h"
 
 bool MakeEfficiency=false;
+bool test=false; 
 
 Long64_t entries=-9; 
 
@@ -27,6 +28,8 @@ Float_t puWt_nom;
 Float_t puWt_up;
 Float_t puWt_down;
 
+double NG=0; //Ngen
+double Nacc=0; 
 
 Int_t nJets=-9;
 
@@ -84,11 +87,22 @@ float dilepton_pt=0;
 
 float pTmuon1=0;
 float pTmuon2=0;
+float pTElectron1=0;
+
+
+float pTbjet1=0;
+float pTbjet2=0;
 
 float weight=0; 
 double B_weight;
 double B_weightP;//sys+
 double B_weightM;//sys-
+
+double B_weightPbc;//sys+
+double B_weightMbc;//sys-
+
+double B_weightPl;//sys+
+double B_weightMl;//sys-
 
 double B_weight_tight;
 double B_weight_tightP;//sys+
@@ -172,6 +186,7 @@ double sum_EMu=0;
 bool fill_histos=true;
 float calcSt();
 string jet_label(int flv);
+void acceptance();
 void setup_files(int jobnumber);
 float event_rapidity();
 void analyze_trees(int jobnumber);

@@ -203,21 +203,6 @@ SusyEventAnalyzer::SetSignalEventWeight(TString dsName, Float_t lumi, Float_t m)
 }
 
 
-void
-SusyEventAnalyzer::createProfile(const char* name,   const char* title,
-                                   const char* xTitle, const char* yTitle,
-                                   Int_t       nBinsX, Double_t    xLow, Double_t xUp)
-{
-    TProfile* pr = new TProfile(name, title, nBinsX, xLow, xUp);
-    
-    pr->GetXaxis()->SetTitle(xTitle);
-    pr->GetYaxis()->SetTitle(yTitle);
-    
-    
-    prName[name] = pr;
-}
-
-
 
 void
 SusyEventAnalyzer::createHistogram(const char* name,   const char* title,
@@ -407,16 +392,6 @@ SusyEventAnalyzer::Run()
         tree->Branch("muon_pz",         "vector<float>", & muon_pz);
         tree->Branch("muon_charge",     "vector<float>", & muon_charge);
         
-        
-        tree->Branch("muon_noIso_e",          "vector<float>", & muon_noIso_e);
-        tree->Branch("muon_noIso_px",         "vector<float>", & muon_noIso_px);
-        tree->Branch("muon_noIso_py",         "vector<float>", & muon_noIso_py);
-        tree->Branch("muon_noIso_pz",         "vector<float>", & muon_noIso_pz);
-        tree->Branch("muon_noIso_charge",     "vector<float>", & muon_noIso_charge);
-        tree->Branch("muon_noIso_PFIso04",     "vector<float>", & muon_noIso_PFIso04);
-        tree->Branch("muon_noIso_PFIso03",     "vector<float>", & muon_noIso_PFIso03);
-
-        
         tree->Branch("loose_muon_e",          "vector<float>", & loose_muon_e);
         tree->Branch("loose_muon_px",         "vector<float>", & loose_muon_px);
         tree->Branch("loose_muon_py",         "vector<float>", & loose_muon_py);
@@ -467,17 +442,12 @@ SusyEventAnalyzer::Run()
         tree->Branch("top_e",          "vector<float>", & top_e);
         
         //create histogram
-		createHistogram("h_topPt_dPhi","","#Delta #Phi", "Events", 100,-3.14,3.14);
-		for(int nJ=0; nJ<=7;nJ++)createHistogram(Form("h_topPt_dPhi_nJets%d",nJ),"","#Delta #Phi", "Events", 50,0,3.14);
-
-		
         createHistogram("h_Zmass_nGamma0","Zmass, N_{#gamma}=0","M_{Z} [GeV]", "Events", 100,0,200);
         createHistogram("h_Zmass","Zmass","M_{Z} [GeV]", "Events", 100,0,200);
         createHistogram("h_Nevents","Nevents","N_{Events}","",10,0,10);
-        createHistogram("h_Gravitino_pt","","p_{T} [GeV]","Events",100,0,1000);
+        createHistogram("h_Gravitino_pt","","p_{T} [GeV]","Events",50,0,100);
         createHistogram("h_eleEta","","eta","Events",30,-3,3);
         createHistogram("h_muonEta","","eta","Events",30,-3,3);
-        
         createHistogram("h_nLight_0b","","Events","n-jets",8,0.5,8.5);
         createHistogram("h_nLight_1b","","Events","n-jets",8,0.5,8.5);
         createHistogram("h_nLight_2b","","Events","n-jets",8,0.5,8.5);
@@ -486,37 +456,24 @@ SusyEventAnalyzer::Run()
         createHistogram("h_pass_pt_barrel","","p_{T}(e) (GeV)","#varepsilon",50,0,500);
         createHistogram("h_pass_tight_pt_barrel","","p_{T}(e) (GeV)","#varepsilon",50,0,500);
         createHistogram("h_total_pt_barrel","","p_{T}(e) (GeV)","total",50,0,500);
-        createHistogram("h_total_muons_pt","","p_{T}(#mu) (GeV)","total",50,0,500);
-        createHistogram("h_pass_muons_pt","","p_{T}(#mu) (GeV)","pass",50,0,500);
-        createHistogram("h_passQmis_muons_pt","","p_{T}(#mu) (GeV)","pass",50,0,500);
-        createHistogram("h_totalQmis_muons_pt","","p_{T}(#mu) (GeV)","total",50,0,500);
-
-        
-        createHistogram("h_total_mvaelectron_pt","","p_{T}(e) (GeV)","total",50,0,500);
-        createHistogram("h_pass_mvaelectron_pt","","p_{T}(e) (GeV)","pass",50,0,500);
-
-		createHistogram("h_jpsiGenPt","","p_{T} (GeV)","Events",55,0,110);
-		createHistogram("h_jpsiGenPtPass","","p_{T} (GeV)","Events",55,0,110);
-
-		createHistogram("h_jpsiGeny","","y","Events",55,-2.5,2.5);
-
-		
         createHistogram("h_Upsilonmass","","M(#mu#mu) (GeV)","Events",50,8,12);
 
+        
+        createHistogram("h_top_pt","","p_{T} (GeV)","Events",50,0,500);
+        createHistogram("h_b_pt","","p_{T} (GeV)","Events",50,0,500);
+        createHistogram("h_split_b_pt","","p_{T} (GeV)","Events",50,0,500);
+
+        createHistogram("h_W_pt","","p_{T} (GeV)","Events",50,0,500);
+
+        createHistogram("h_Singlino_pt","","p_{T} (GeV)","Events",50,0,500);
+        createHistogram("h_Singlet_pt","","p_{T} (GeV)","Events",50,0,500);
+
+        
         createHistogram("h_npv","","Events","N_{npv}",25,0,50);
 
-        createHistogram("h_muon_ptPF","","p_{T}(#mu) (GeV)","total",50,0,1000);
-        createHistogram("h_muon_ptTuneP","","p_{T}(#mu) (GeV)","total",50,0,1000);
 
         //createHistogram("h_mumu","dimuon mass","M_{#mu#mu} [GeV]", "Events", 100,0,200);
         createHistogram("h_cutflow_table","Cutflow","N_{Events}","",100,0,10);
-        
-        createHistogram("h_cutflow_table_RPV","Cutflow","N_{Events}","",100,0,10);
-        createHistogram("h_cutflow_table_RPV2","Cutflow","N_{Events}","",100,0,10);
-
-        
-        
-        createProfile("pr_deltaPt_pt","","p_{T} (GeV)","#Delta p_{T}/p_{T}",150,0,1500);
         
         ////////// INITIALIZE JEC //////////
         // REMOVE THE LINES BELOW IF NOT RUNNING IN CMSSW ENVIRONMENT
@@ -576,9 +533,6 @@ SusyEventAnalyzer::Run()
             
             ////////// CLEAR FLAT NTUPLE VECTORS //////////
             muon_e->clear();     muon_px->clear();     muon_py->clear();     muon_pz->clear();     muon_charge->clear();
-            muon_noIso_e->clear();     muon_noIso_px->clear();     muon_noIso_py->clear();     muon_noIso_pz->clear();     muon_noIso_charge->clear(); muon_noIso_PFIso04->clear();
-            muon_noIso_PFIso03->clear();
-            
             loose_muon_e->clear();     loose_muon_px->clear();     loose_muon_py->clear();     loose_muon_pz->clear();     loose_muon_charge->clear();
             electron_e->clear(); electron_px->clear(); electron_py->clear(); electron_pz->clear(); electron_charge->clear();
             loose_electron_e->clear(); loose_electron_px->clear(); loose_electron_py->clear(); loose_electron_pz->clear(); loose_electron_charge->clear();
@@ -598,13 +552,6 @@ SusyEventAnalyzer::Run()
             int nB=0;
             std::vector<TLorentzVector> genElectrons;
             genElectrons.clear();
-            
-            std::vector<TLorentzVector> genMuons;
-            genMuons.clear();
-            
-            std::vector<int> genMuonsQ;
-            genMuons.clear();
-            
             int NgenLept=0;
 
             //Run some gen studies.
@@ -623,41 +570,20 @@ SusyEventAnalyzer::Run()
                 int Nw=0;
                 bool EMudecay1=false;
                 bool EMudecay2=false;
-                cout << "gen particles size: "<< event.genParticles.size() << endl; 
+                
                 for(size_t i=0; i< event.genParticles.size(); i++){
                     TLorentzVector genElectron;
-                    TLorentzVector genMuon; 
                     
-                    if(event.genParticles.at(i).status==1 && TMath::Abs(event.genParticles.at(i).pdgId)==11 && (TMath::Abs(event.genParticles.at(i).mother->pdgId)==23 || TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024 || TMath::Abs(event.genParticles.at(i).mother->pdgId)==24)){
+                    if(event.genParticles.at(i).status==1 && TMath::Abs(event.genParticles.at(i).pdgId)==11 && TMath::Abs(event.genParticles.at(i).mother->pdgId)==23){
                         //if electron that comes from the Z, save it.
                         genElectron.SetPxPyPzE(event.genParticles.at(i).momentum.Px(),event.genParticles.at(i).momentum.Py(),event.genParticles.at(i).momentum.Pz(),event.genParticles.at(i).momentum.E());
                         genElectrons.push_back(genElectron);
-                    }
-                    //1000024
-                    
-                    if(event.genParticles.at(i).status==1 && TMath::Abs(event.genParticles.at(i).pdgId)==13 && (TMath::Abs(event.genParticles.at(i).mother->pdgId)==23 || TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024 || TMath::Abs(event.genParticles.at(i).mother->pdgId)==24)){
-                        //if electron that comes from the Z or chargino, save it.
-                        genMuon.SetPxPyPzE(event.genParticles.at(i).momentum.Px(),event.genParticles.at(i).momentum.Py(),event.genParticles.at(i).momentum.Pz(),event.genParticles.at(i).momentum.E());
-                        genMuons.push_back(genMuon);
-                        genMuonsQ.push_back(event.genParticles.at(i).charge);
                     }
                     
                     if(event.genParticles.at(i).status==1){
                         pGentot+=event.genParticles.at(i).momentum;
                     }
                     
-					if(TMath::Abs(event.genParticles.at(i).pdgId)==443){
-						//cout << "jpsi: " << event.genParticles.at(i).momentum.Perp() << endl; 
-						hName["h_jpsiGenPt"]->Fill(event.genParticles.at(i).momentum.Perp()); 
-						hName["h_jpsiGeny"]->Fill(event.genParticles.at(i).momentum.Rapidity()); 
-
-					}
-					/*
-					if(TMath::Abs(event.genParticles.at(i).pdgId)==22){
-						cout << "photon: " << endl; 
-					}
-					*/
-				
                     if(TMath::Abs(event.genParticles.at(i).pdgId)>=1000001 && TMath::Abs(event.genParticles.at(i).pdgId)<=1000006){
                       //  cout << "squark: " <<event.genParticles.at(i).pdgId << endl;
                     }
@@ -674,6 +600,24 @@ SusyEventAnalyzer::Run()
                         cout << "selectron: "  << TMath::Abs(event.genParticles.at(i).pdgId)<< endl;
                     }*/
                     if(TMath::Abs(event.genParticles.at(i).pdgId)==1000039)hName["h_Gravitino_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    
+                    if(TMath::Abs(event.genParticles.at(i).pdgId)==6)hName["h_top_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    
+                     if(TMath::Abs(event.genParticles.at(i).pdgId)==5)hName["h_b_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    
+                      if(TMath::Abs(event.genParticles.at(i).pdgId)==24)hName["h_W_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    
+                    if(TMath::Abs(event.genParticles.at(i).pdgId)==3000001)hName["h_Singlino_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    if(TMath::Abs(event.genParticles.at(i).pdgId)==3000002)hName["h_Singlet_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                    
+                    //cout << event.genParticles.at(i).pdgId << " "  << event.genParticles.at(i).momentum.Perp() << endl;
+                    
+                    if(TMath::Abs(event.genParticles.at(i).pdgId)==5){
+                        //cout << event.genParticles.at(i).mother->pdgId << endl;
+                        if(TMath::Abs(event.genParticles.at(i).mother->pdgId)!=6) hName["h_split_b_pt"]->Fill(event.genParticles.at(i).momentum.Perp());
+                            
+                    }
+                    
                     
                     if(event.genParticles.at(i).pdgId==23) hName["h_Zmass"]->Fill(event.genParticles.at(i).momentum.M());
                     
@@ -696,7 +640,7 @@ SusyEventAnalyzer::Run()
                     // cout << "count number of leptonic W decays: " << endl;
                     // cout << TMath::Abs(event.genParticles.at(i).pdgId) << endl;
                     if(TMath::Abs(event.genParticles.at(i).pdgId)==11  || TMath::Abs(event.genParticles.at(i).pdgId)==13 || TMath::Abs(event.genParticles.at(i).pdgId)==15)  {
-                        if(TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024 || TMath::Abs(event.genParticles.at(i).mother->pdgId)==23) NgenLept++;
+                        if(TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024) NgenLept++;
                          //if(TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024) cout << "lepton: " <<TMath::Abs(event.genParticles.at(i).pdgId) << endl;
                          //if(TMath::Abs(event.genParticles.at(i).mother->pdgId)==1000024) cout << "mother of lepton: " <<TMath::Abs(event.genParticles.at(i).mother->pdgId) << endl;
                         //   cout <<"mother: " << TMath::Abs(event.genParticles.at(i).mother->pdgId) << endl;
@@ -740,7 +684,7 @@ SusyEventAnalyzer::Run()
                         
                         Wtopi*=w;
                         //cout << "top pt: " << Ptop.Perp() << endl;
-						//std::cout << "top pt: " << Ptop.Perp() << " weight: " << TMath::Exp(0.156-0.00137*x) << std::endl;
+                        //   std::cout << "top pt: " << Ptop.Perp() << " weight: " << TMath::Exp(0.156-0.00137*x) << std::endl;
                         WtopiP*=1.2*Wtopi;
                         WtopiM*=0.8*Wtopi;
                         
@@ -777,64 +721,24 @@ SusyEventAnalyzer::Run()
             }
             
             //if(NgenLept!=2) continue;
-		
-			
-			
+            
             hName["h_npv"]->Fill(event.vertices.size());
             nCnt[0]++;
             hName["h_cutflow_table"]->Fill("Ngen",1);
-            hName["h_cutflow_table_RPV"]->Fill("Ngen",1);
-            hName["h_cutflow_table_RPV2"]->Fill("Ngen",1);
-
             
             ////////// GOOD LUMI FILTER //////////
             if(printLevel > 1) out << "Apply good lumi list." << std::endl;
             if(!IsGoodLumi(event.runNumber, event.luminosityBlockNumber)) continue;
             
             ////////// MET FILTER //////////
-			//COMMENT OUT FOR JPSI GUN ///
-			
             if(event.isRealData){
                 if(printLevel > 1) out << "Apply MET filter." << std::endl;
                 if(!event.passMetFilters()) continue;
             }
             
-            /*
-            bool Ele1=false;
-            bool Ele2=false;
-            for(int igen=0; igen<genElectrons.size(); igen++){
-                double eta=fabs(genElectrons[igen].Eta());
-                double pt=genElectrons[igen].Perp();
-                if(fabs(genElectrons[igen].Eta())<2.4)hName["h_total_mvaelectron_pt"]->Fill(genElectrons[igen].Perp());
-                if(igen==0 && pt>50 && eta<2.4 && !(eta<1.5660 && eta>1.442))Ele1=true;
-                if(igen==1 && pt>50 && eta<2.4 && !(eta<1.5660 && eta>1.442))Ele2=true;
-                
-            }
-            
-            if(Ele1 && Ele2)hName["h_cutflow_table_RPV"]->Fill("Gen Acc ee",1);
-            
-            if(Ele1 && Ele2)nCnt[14]++;
-            
-            bool Mu1=false;
-            bool Mu2=false;
-            for(int igen=0; igen<genMuons.size(); igen++){
-                double pt=genMuons[igen].Perp();
-                if(fabs(genMuons[igen].Eta())<2.1)hName["h_total_muons_pt"]->Fill(genMuons[igen].Perp());
-                if(igen==0 && pt>50 && fabs(genMuons[igen].Eta())<2.1) Mu1=true;
-                if(igen==1 && pt>50 && fabs(genMuons[igen].Eta())<2.1) Mu2=true;
-                
-            }
-            if(Mu1 && Mu2) nCnt[15]++;
-            if(Mu1 && Mu2) hName["h_cutflow_table_RPV"]->Fill("Gen Acc #mu#mu",1);
-            */
-            
             ////////// TRIGGER //////////
-			
             if(printLevel > 1) out << "Apply HLT cut." << std::endl;
             if(!PassTriggers()) continue;
-            //if((Mu1 && Mu2) || (Ele1 && Ele2))
-            hName["h_cutflow_table_RPV"]->Fill("Trigger",1);
-
             
             ////////// REQUIRE AT LEAST ONE GOOD VERTEX //////////
             if(printLevel > 1) out << "Require at least one good vertex." << std::endl;
@@ -851,9 +755,7 @@ SusyEventAnalyzer::Run()
             if(printLevel > 1) out << "Event passes preselection." << std::endl;
             
             /* number of events passing preselection */
-			
             nCnt[1]++;
-	
             
             ////////// SELECT MUONS //////////
             if (printLevel > 1) out << "Find muons in the event" << std::endl;
@@ -865,7 +767,6 @@ SusyEventAnalyzer::Run()
             
             
             susy::MuonCollection const& muons(event.muons["muons"]);
-            //susy::TrackCollection const& tracks(event.tracks);
             
             int NLMuon_noIso=0;
             int NTMuon_noIso=0;
@@ -875,20 +776,6 @@ SusyEventAnalyzer::Run()
                 
                 if (!muon.isPFMuon())                              continue;
                 if (!muon.isTrackerMuon() && !muon.isGlobalMuon()) continue;
-                if(fabs(muon.momentum.Eta())>2.1) continue;
-                
-                //cout << "TeV track index: " << muon.highPtBestTrackIndex() << endl;
-               // susy::Track const& track(event.tracks[muon.highPtBestTrackIndex()]);
-                //cout << "TeV track pt: " << track.momentum.Pt() << endl;
-                //cout << "TeV track: " << muon.highPtBestTrackType->momentum.Pt() << endl;
-                //cout << "PF Pt " << muon.momentum.Pt() << endl;
-                
-                hName["h_muon_ptPF"]->Fill(muon.momentum.Pt());
-                //hName["h_muon_ptTuneP"]->Fill(track.momentum.Pt());
-                
-               // prName["pr_deltaPt_pt"]->Fill(muon.momentum.Pt(), (track.momentum.Pt()-muon.momentum.Pt())/muon.momentum.Pt());
-               
-                //if(track.momentum.Pt() < muon2_ptCut);
                 if (muon.momentum.Pt() < muon2_ptCut)              continue;
                 
                 Float_t effA          = muonEffectiveAreas(fabs(muon.momentum.Eta()));
@@ -966,6 +853,7 @@ SusyEventAnalyzer::Run()
             std::sort(looseMuons_noIso.begin(), looseMuons_noIso.end(), PtGreater<susy::Muon>);
             std::sort(tightMuons_noIso.begin(), tightMuons_noIso.end(), PtGreater<susy::Muon>);
             
+            
             // Leading muon must pass higher pT cut
             if (looseMuons.size() >= 1 && looseMuons.at(0)->momentum.Pt() < muon1_ptCut) looseMuons.clear();
             if (tightMuons.size() >= 1 && tightMuons.at(0)->momentum.Pt() < muon1_ptCut) tightMuons.clear();
@@ -1000,9 +888,6 @@ SusyEventAnalyzer::Run()
             
             std::vector<susy::Electron const*> looseElectrons;
             std::vector<susy::Electron const*> tightElectrons;
-            std::vector<susy::Electron const*> tight_mvaElectrons;
-            std::vector<susy::Electron const*> tight_mvaElectrons_noIso;
-
             std::vector<susy::Electron const*> looseElectrons_noIso;
             std::vector<susy::Electron const*> tightElectrons_noIso;
             
@@ -1024,6 +909,7 @@ SusyEventAnalyzer::Run()
                 }
                 
                 Float_t dInvEInvP = 1.0 / electron.ecalEnergy * (1.0 - electron.eSuperClusterOverP);
+                
                 if (sameAsTightMuon)                           continue;
                 if (electron.momentum.Et()  < electron2_etCut) continue;
                 if (!electron.isEB())                          continue;
@@ -1057,8 +943,6 @@ SusyEventAnalyzer::Run()
                 bool tightCut = tightDEtaInCut && tightDPhiInCut && tightDzVtxCut &&
                 tightIsoCut    && tightNMissingHitsCut;
                 
-				if(tightCut && sameAsTightMuon) nCnt[14]++; 
-
                 bool tightCut_noIso = tightDEtaInCut && tightDPhiInCut && tightDzVtxCut && tightNMissingHitsCut;
                 if(tightCut_noIso)NTElec_noIso++;
                 
@@ -1068,79 +952,9 @@ SusyEventAnalyzer::Run()
                 if (tightCut_noIso) tightElectrons_noIso.push_back(& electron);
             }
             
-            
-            for(size_t iEle(0); iEle != electrons.size(); ++iEle) {
-                susy::Electron const& electron(electrons[iEle]);
-                
-                bool sameAsTightMuon = false;
-                
-                for (size_t i = 0; i < tightMuons.size(); i++) {
-                    if (isSameObject2(electron.momentum, tightMuons.at(i)->momentum, 0.3)) {
-                        sameAsTightMuon = true;
-                        break;
-                    }
-                }
-                
-                Float_t dInvEInvP = 1.0 / electron.ecalEnergy * (1.0 - electron.eSuperClusterOverP);
-                
-                if (sameAsTightMuon)                               continue;
-                if (electron.momentum.Et()  < electron2_etCut) continue;
-                if (fabs(electron.momentum.Eta()) >= 2.5 )         continue;
-                //if (electron.gsfTrack       == 0)                  continue;
-                if (!electron.passConversionVeto)                  continue;
-                
-                Float_t dr03TkSumPtRel         =  electron.dr03TkSumPt/electron.momentum.Pt();
-                Float_t dr03EcalRecHitSumEtRel =  electron.dr03EcalRecHitSumEt/electron.momentum.Pt();
-                Float_t dr03HcalTowerSumEtRel  = (electron.dr03HcalDepth1TowerSumEt + electron.dr03HcalDepth2TowerSumEt)/electron.momentum.Pt();
-                
-                Float_t effA          = electronEffectiveAreas(fabs(electron.momentum.Eta()));
-                Float_t pfCombinedIso = (electron.chargedHadronIso + std::max(double (electron.neutralHadronIso +
-                                                                                      electron.photonIso - event.rho25 * effA), 0.0)) / electron.momentum.Pt();
-                
-                bool passPreTrigMVA = false;
-                if (electron.isEB()                                              &&
-                    electron.sigmaIetaIeta                           <    0.014  &&
-                    electron.hcalOverEcalBc                          <    0.15   && //hadronicOverEm
-                    dr03TkSumPtRel                                   <    0.2    &&
-                    dr03EcalRecHitSumEtRel                           <    0.2    &&
-                    dr03HcalTowerSumEtRel                            <    0.2    &&
-                    electron.nMissingHits                            ==   0.0    // gsfTrack().trackerExpectedHitsInner().numberOfLostHits()
-                    )passPreTrigMVA = true;
-                else if(
-                        electron.isEE()                                              &&
-                        electron.sigmaIetaIeta                           <    0.035  &&
-                        electron.hcalOverEcalBc                          <    0.10   &&
-                        dr03TkSumPtRel                                   <    0.2    &&
-                        dr03EcalRecHitSumEtRel                           <    0.2    &&
-                        dr03HcalTowerSumEtRel                            <    0.2    &&
-                        electron.nMissingHits                            ==   0.0
-                        )passPreTrigMVA = true;
-                
-                
-              
-                bool tightPreCut = false;
-                
-                tightPreCut = (!electron.isEBEEGap()                                   &&
-                               fabs(electron.gsfTrack->dxyPv(primVtx.position)) < 0.02 &&
-                               electron.nMissingHits                            <=0.0 );
-            
-                bool passMva=electron.mvaTrig>0.9;
-                
-                bool isolated=false;
-                if(pfCombinedIso<0.1) isolated=true;
-                bool tightCut = tightPreCut && passPreTrigMVA && isolated && passMva;//  &&  electron.mvaTrig > 0.9  &&  pfCombinedIso < 0.10;
-                if (tightPreCut && passPreTrigMVA && passMva) {tight_mvaElectrons_noIso.push_back(& electron);}
-                if (tightCut) {tight_mvaElectrons.push_back(& electron);}
-            }
-
-            
             ////////// SORT SELECTED ELECTRONS //////////
-
             std::sort(looseElectrons.begin(), looseElectrons.end(), PtGreater<susy::Electron>);
             std::sort(tightElectrons.begin(), tightElectrons.end(), PtGreater<susy::Electron>);
-            std::sort(tight_mvaElectrons.begin(), tight_mvaElectrons.end(), PtGreater<susy::Electron>);
-            std::sort(tight_mvaElectrons_noIso.begin(), tight_mvaElectrons_noIso.end(), PtGreater<susy::Electron>);
-
             //no Iso
             std::sort(looseElectrons_noIso.begin(), looseElectrons_noIso.end(), PtGreater<susy::Electron>);
             std::sort(tightElectrons_noIso.begin(), tightElectrons_noIso.end(), PtGreater<susy::Electron>);
@@ -1148,14 +962,13 @@ SusyEventAnalyzer::Run()
             
             // Leading electron must pass higher pT cut
             if (looseElectrons.size() >= 1 && looseElectrons.at(0)->momentum.Et() < electron1_etCut) looseElectrons.clear();
-            if (tight_mvaElectrons.size() >= 1 && tight_mvaElectrons.at(0)->momentum.Et() < electron1_etCut) tight_mvaElectrons.clear();
             if (tightElectrons.size() >= 1 && tightElectrons.at(0)->momentum.Et() < electron1_etCut) tightElectrons.clear();
             
             // Leading electron must pass higher pT cut
             if (looseElectrons_noIso.size() >= 1 && looseElectrons_noIso.at(0)->momentum.Et() < electron1_etCut) looseElectrons_noIso.clear();
             if (tightElectrons_noIso.size() >= 1 && tightElectrons_noIso.at(0)->momentum.Et() < electron1_etCut) tightElectrons_noIso.clear();
             
-            //for (size_t i = 0; i < tightElectrons.size(); i++)hName["h_eleEta"]->Fill(tightElectrons.at(i)->momentum.Eta());
+             for (size_t i = 0; i < tightElectrons.size(); i++)hName["h_eleEta"]->Fill(tightElectrons.at(i)->momentum.Eta());
 
             
             
@@ -1245,8 +1058,8 @@ SusyEventAnalyzer::Run()
                     }
                 }
                 
-                for (size_t i = 0; i < tight_mvaElectrons.size(); i++) {
-                    if (isSameObject2(jet.momentum, tight_mvaElectrons.at(i)->momentum, 0.5)) {
+                for (size_t i = 0; i < tightElectrons.size(); i++) {
+                    if (isSameObject2(jet.momentum, tightElectrons.at(i)->momentum, 0.5)) {
                         sameAsTightElectron = true;
                         break;
                     }
@@ -1323,19 +1136,9 @@ SusyEventAnalyzer::Run()
                     //cout << corrP4.Perp() << " Eta: " << corrP4.Eta() << endl;
                 }
             }
-           
+            
             ////////// SORT SELECTED JETS //////////
             std::sort(goodPfJets.begin(), goodPfJets.end(), PtGreater<susy::PFJet>);
-            /*
-            if(goodPfJets.size()>=1){
-                if(goodPfJets.at(0)->momentum.Perp()<100) goodPfJets.clear();
-            }
-            
-            if(goodPfJets.size()>=2){
-                if(goodPfJets.at(1)->momentum.Perp()<50) goodPfJets.clear();
-            }
-            
-            */
             /*
              cout << "reconstructed jets: " << endl;
              for (size_t i = 0; i < goodPfJets.size(); i++) {
@@ -1421,23 +1224,13 @@ SusyEventAnalyzer::Run()
             int Nb=0;
             int Nlight=0;
             
-            /*
+            
             //tag and probe for electron efficiencies
             for(int igen=0; igen<genElectrons.size(); igen++){
                 if(fabs(genElectrons[igen].Eta())<1.44)hName["h_total_pt_barrel"]->Fill(genElectrons[igen].Perp());
             }
-            */
-            //Ele1 && Ele2 &&
-            if(tightElectrons_noIso.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight ee (cut and count) no Iso",1);
-            if(tight_mvaElectrons.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight ee mva Iso",1);
-            if(tight_mvaElectrons_noIso.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight ee mva no Iso",1);
-
-            if(tightElectrons.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight ee (cut and count) Iso",1);
-
             
-            if(tightMuons_noIso.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight #mu#mu no Iso",1);
-            if(tightMuons.size()==2)hName["h_cutflow_table_RPV"]->Fill("tight #mu#mu Iso",1);
-            /*
+            
             for (size_t i = 0; i < looseElectrons.size(); i++) {
                 bool match=false;
                 for(int igen=0; igen<genElectrons.size(); igen++){
@@ -1467,46 +1260,6 @@ SusyEventAnalyzer::Run()
         
             }
             
-            for (size_t i = 0; i < tight_mvaElectrons.size(); i++) {
-                bool match=false;
-                for(int igen=0; igen<genElectrons.size(); igen++){
-                    if(tight_mvaElectrons.at(i)->momentum.DeltaR(genElectrons[igen])<0.3) match=true;
-                }
-                
-                if(!match)continue;
-                float pt=tight_mvaElectrons.at(i)->momentum.Perp();
-                float eta= fabs(tight_mvaElectrons.at(i)->momentum.Eta());
-                
-                if(eta<2.4)hName["h_pass_mvaelectron_pt"]->Fill(pt);
-                
-            }
-            
-            
-            for (size_t i = 0; i < tightMuons.size(); i++) {
-                bool match=false;
-                int IG=-1;
-                
-                for(int igen=0; igen<genMuons.size(); igen++){
-                    if(tightMuons.at(i)->momentum.DeltaR(genMuons[igen])<0.3) {
-                       match=true;
-                       IG=igen; 
-                    }
-                }
-                
-                if(!match)continue;
-                float pt=tightMuons.at(i)->momentum.Perp();
-                float eta= fabs(tightMuons.at(i)->momentum.Eta());
-                
-                if(eta<2.1)hName["h_pass_muons_pt"]->Fill(pt);
-                //h_passQmis_muons_pt
-         
-
-                
-                hName["h_totalQmis_muons_pt"]->Fill(pt);
-                if(genMuonsQ.at(IG)!=tightMuons.at(i)->bestTrack->charge)hName["h_passQmis_muons_pt"]->Fill(pt);
-            }
-            */
-            
             
             
             //loose muons - do not fill St
@@ -1521,10 +1274,6 @@ SusyEventAnalyzer::Run()
             
             //tight muons
             for (size_t i = 0; i < tightMuons.size(); i++) {
-                //susy::Track const& track(event.tracks[tightMuons.at(i)->highPtBestTrackIndex()]);
-                //tempSt +=track.momentum.Pt();
-               
-
                 tempSt += tightMuons.at(i)->momentum.Pt();
                 
                 muon_e->push_back     (tightMuons.at(i)->momentum.E());
@@ -1533,26 +1282,6 @@ SusyEventAnalyzer::Run()
                 muon_pz->push_back    (tightMuons.at(i)->momentum.Pz());
                 muon_charge->push_back(tightMuons.at(i)->bestTrack->charge);
             }
-            for (size_t i = 0; i < tightMuons_noIso.size(); i++) {
-                //tempSt += tightMuons.at(i)->momentum.Pt();
-                
-                Float_t effA          = muonEffectiveAreas(fabs(tightMuons_noIso.at(i)->momentum.Eta()));
-                Float_t pfCombinedIso04 = (tightMuons_noIso.at(i)->sumChargedHadronPt04 + std::max(double (tightMuons_noIso.at(i)->sumNeutralHadronEt04 +
-                                        tightMuons_noIso.at(i)->sumPhotonEt04 - event.rho25 * effA), 0.0)) / tightMuons_noIso.at(i)->momentum.Pt();
-                
-                Float_t pfCombinedIso03 = (tightMuons_noIso.at(i)->sumChargedHadronPt03 + std::max(double (tightMuons_noIso.at(i)->sumNeutralHadronEt03 +
-                                                                                                         tightMuons_noIso.at(i)->sumPhotonEt03 - event.rho25 * effA), 0.0)) / tightMuons_noIso.at(i)->momentum.Pt();
-                
-                muon_noIso_e->push_back     (tightMuons_noIso.at(i)->momentum.E());
-                muon_noIso_px->push_back    (tightMuons_noIso.at(i)->momentum.Px());
-                muon_noIso_py->push_back    (tightMuons_noIso.at(i)->momentum.Py());
-                muon_noIso_pz->push_back    (tightMuons_noIso.at(i)->momentum.Pz());
-                muon_noIso_charge->push_back(tightMuons_noIso.at(i)->bestTrack->charge);
-                muon_noIso_PFIso04->push_back(pfCombinedIso04);
-                muon_noIso_PFIso03->push_back(pfCombinedIso03);
-
-            }
-            
             
             //loose electrons - do not fill st
             for (size_t i = 0; i < looseElectrons.size(); i++) {
@@ -1564,17 +1293,15 @@ SusyEventAnalyzer::Run()
                 loose_electron_charge->push_back(looseElectrons.at(i)->gsfTrack->charge);
             }
             
-            //tight electrons - use for st definition
-            //for (size_t i = 0; i < tight_mvaElectrons.size(); i++) tempSt += tight_mvaElectrons.at(i)->momentum.Et();
-            for (size_t i = 0; i < tight_mvaElectrons.size(); i++) {
+            //tight electrons - use for st definition		
+            for (size_t i = 0; i < tightElectrons.size(); i++) {
+                tempSt += tightElectrons.at(i)->momentum.Et();
                 
-                tempSt += tight_mvaElectrons.at(i)->momentum.Et();
-                
-                electron_e->push_back     (tight_mvaElectrons.at(i)->momentum.E());
-                electron_px->push_back    (tight_mvaElectrons.at(i)->momentum.Px());
-                electron_py->push_back    (tight_mvaElectrons.at(i)->momentum.Py());
-                electron_pz->push_back    (tight_mvaElectrons.at(i)->momentum.Pz());
-                electron_charge->push_back(tight_mvaElectrons.at(i)->gsfTrack->charge);
+                electron_e->push_back     (tightElectrons.at(i)->momentum.E());
+                electron_px->push_back    (tightElectrons.at(i)->momentum.Px());
+                electron_py->push_back    (tightElectrons.at(i)->momentum.Py());
+                electron_pz->push_back    (tightElectrons.at(i)->momentum.Pz());
+                electron_charge->push_back(tightElectrons.at(i)->gsfTrack->charge);
             }
             
             for (size_t i = 0; i < mediumPhotons.size(); i++) {
@@ -1587,7 +1314,6 @@ SusyEventAnalyzer::Run()
             }
             
             for (size_t i = 0; i < goodPfJets.size(); i++) {
-                
                 tempSt += goodPfJets.at(i)->momentum.Pt();
                 tempHt += goodPfJets.at(i)->momentum.Pt();
                 
@@ -1601,12 +1327,12 @@ SusyEventAnalyzer::Run()
                  */
                 jet_bTagL->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.244); // loose csv working point b-tag
                 jet_bTagM->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679); //medium csv working point b-tag
-                if(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679) Nb++;
+                //if(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679) Nb++;
                 jet_bTagT->push_back(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.898); //tight csv working point b-tag
                 jet_algFlavor->push_back(goodPfJets.at(i)->algDefFlavour); 
                 jet_phyFlavor->push_back(goodPfJets.at(i)->phyDefFlavour); 
                 if(fabs(goodPfJets.at(i)->algDefFlavour)!=5)Nlight++;
-                // if(fabs(goodPfJets.at(i)->algDefFlavour)==5)Nb++;
+                 if(fabs(goodPfJets.at(i)->algDefFlavour)==5)Nb++;
                 /*
                 if(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.244) cout << "btag L: ";
                 if(goodPfJets.at(i)->bTagDiscriminators[susy::kCSV] > 0.679) cout << " btag M: ";
@@ -1618,20 +1344,6 @@ SusyEventAnalyzer::Run()
                 //cout << "phy flavor: " << goodPfJets.at(i)->phyDefFlavour << endl; 
             }
             
-			TLorentzVector p1T;
-			TLorentzVector p2T; 
-			for(int i=0; i<top_e->size(); i++){
-				if(i==0)p1T.SetPxPyPzE(top_px->at(i),top_py->at(i),top_pz->at(i),top_e->at(i)); 
-				if(i==1)p2T.SetPxPyPzE(top_px->at(i),top_py->at(i),top_pz->at(i),top_e->at(i)); 
-			}
-			
-			if(top_e->size()==2){
-				hName["h_topPt_dPhi"]->Fill(TMath::Abs(p1T.DeltaPhi(p2T))); 
-				int nJ=goodPfJets.size(); 
-				if(nJ>7) nJ=7; 
-				hName[Form("h_topPt_dPhi_nJets%d",nJ)]->Fill(TMath::Abs(p1T.DeltaPhi(p2T))); 
-
-			}
             //cout << "Nquark: "<< nB  << " Nb-jet: " << Nb << endl;
             
             if(nB==0)hName["h_nLight_0b"]->Fill(Nlight);
@@ -1639,54 +1351,13 @@ SusyEventAnalyzer::Run()
             if(nB==2)hName["h_nLight_2b"]->Fill(Nlight);
 
             if (metV.Mod() > met_etCut)
-                //tempSt += metV.Mod();
+                tempSt += metV.Mod();
             
             st = tempSt;
     
-    /*
-            if(tightMuons.size()==2 ){
-                hName["h_cutflow_table_RPV2"]->Fill("2 tight muons",1);
-                if(tightMuons.at(0)->momentum.Perp()>50 && tightMuons.at(1)->momentum.Perp()>50 ){
-                    hName["h_cutflow_table_RPV2"]->Fill("lepton pt > 50 ",1);
-                    
-                    if(jet_e->size()>=2){
-                        hName["h_cutflow_table_RPV2"]->Fill("$\\geq$ 2 jets",1);
-                        bool goodMass=false;
-                        
-                        if(tightMuons.size()==2){
-                            TLorentzVector tmp1=tightMuons.at(0)->momentum;
-                            TLorentzVector tmp2=tightMuons.at(1)->momentum;
-                            
-                            tmp1+=tmp2;
-                            double dimuonMass=tmp1.M();
-                            if((dimuonMass>50 && dimuonMass<75) || (dimuonMass > 105)) goodMass=true;
-                        }
-                        
-                        if(goodMass){
-                            hName["h_cutflow_table_RPV2"]->Fill("dilepton veto",1);
-                            if(goodPfJets.at(0)->momentum.Perp()>100 && goodPfJets.at(1)->momentum.Perp()>50 ){
-                                if(jet_e->size()>=5){
-                                    hName["h_cutflow_table_RPV2"]->Fill("$\\geq$ 5 jets",1);
-                                    if(Nb>=1){
-                                        hName["h_cutflow_table_RPV2"]->Fill("$\\geq$ 1b-tag",1);
-                                        if(st>300){
-                                            hName["h_cutflow_table_RPV2"]->Fill("st > 300 ",1);
-                                            if(metV.Mod()  < 100){
-                                                hName["h_cutflow_table_RPV2"]->Fill("met < 100 ",1);
-                                                
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
             
             if(jet_e->size()>=4 && st>300){
-     
+                /*
                  hName["h_cutflow_table"]->Fill("nJets #geq4, S_{T} > 300",1);
                  if(looseElectrons_noIso.size()==1 && looseMuons_noIso.size()==1){
                  hName["h_cutflow_table"]->Fill("1 L#mu & 1Le no Iso",1);
@@ -1705,49 +1376,7 @@ SusyEventAnalyzer::Run()
                  
                  
                  }
-                 }
-                if((tightMuons.size()==2) || (tight_mvaElectrons.size()==2) ){
-                    bool goodMass=false;
-                    
-                    if(tightMuons.size()==2){
-                        TLorentzVector tmp1=tightMuons.at(0)->momentum;
-                        TLorentzVector tmp2=tightMuons.at(1)->momentum;
-                    
-                        tmp1+=tmp2;
-                        double dimuonMass=tmp1.M();
-                        if((dimuonMass>50 && dimuonMass<75) || (dimuonMass > 105)) goodMass=true;
-                    }
-                    
-                    if(tight_mvaElectrons.size()==2){
-                        TLorentzVector tmp1=tight_mvaElectrons.at(0)->momentum;
-                        TLorentzVector tmp2=tight_mvaElectrons.at(1)->momentum;
-                        
-                        tmp1+=tmp2;
-                        double dielectronMass=tmp1.M();
-                        if((dielectronMass>50 && dielectronMass<75) || (dielectronMass > 105)) goodMass=true;
-
-                    }
-                    
-                    
-                    hName["h_cutflow_table_RPV"]->Fill("nJets #geq4, S_{T} > 300",1);
-                    if(jet_e->size()>=5){
-                        hName["h_cutflow_table_RPV"]->Fill("nJets #geq5",1);
-                        //if(st>1400){
-                        //    hName["h_cutflow_table_RPV"]->Fill("S_{T} > 1400",1);
-                        if(Nb>=1){
-                            hName["h_cutflow_table_RPV"]->Fill("#geq 1 b-tag",1);
-                            if(metV.Mod()  < 100) {
-                                hName["h_cutflow_table_RPV"]->Fill("met < 100 GeV",1);
-                                if(goodMass){
-                                    hName["h_cutflow_table_RPV"]->Fill("Mass >50 && Not Z",1);
-                                    if(Nb>=2)  hName["h_cutflow_table_RPV"]->Fill("#geq 2 b-tag",1);
-                            }
-                            }
-                        }
-                    //}
-                    }
-                }
-                
+                 }*/
                 hName["h_cutflow_table"]->Fill("nJets #geq4, S_{T} > 300",1);
                 if(tightElectrons_noIso.size()==1){
                     hName["h_cutflow_table"]->Fill("1 e (no Iso)",1);
@@ -1772,9 +1401,9 @@ SusyEventAnalyzer::Run()
                 
             }//st cut
         //}//top level
-        */
         
-            if(jet_px->size()>=2) tree->Fill();
+        
+            if(jet_px->size()>=1) tree->Fill();
         
             ////////// FILL SKIMS //////////
             if(copyEvents){
@@ -1805,10 +1434,6 @@ SusyEventAnalyzer::Run()
             out << " looseLeptons   >= 1 || loosePhoton >= 1 && goodPfJets == 5 : " << nCnt[11] << " (" << nCnt[11] / float(nCnt[1]) << ")" << std::endl;
             out << " looseLeptons   >= 1 || loosePhoton >= 1 && goodPfJets == 6 : " << nCnt[12] << " (" << nCnt[12] / float(nCnt[1]) << ")" << std::endl;
             out << " looseLeptons   >= 1 || loosePhoton >= 1 && goodPfJets == 7 : " << nCnt[13] << " (" << nCnt[13] / float(nCnt[1]) << ")" << std::endl;
-			out << "Overlapping muons-electron: " << nCnt[14] << " " << std::endl; 
-            out << " 2 Gen Electrons in Acc : " << nCnt[14] << std::endl;
-            out << " 2 Gen Muons in Acc : " << nCnt[15]  << std::endl;
-
         }
         
         if(printLevel > 0) out << "Save outputs" << std::endl;
