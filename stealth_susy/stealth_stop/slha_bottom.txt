@@ -1,0 +1,8 @@
+#         ID            Width
+DECAY   5000001     1.00000000E-03   # singlino decays
+#           BR         NDA      ID1       ID2
+     1.00000000E-00    2     5000002   5000003        # BR(singlino -> singlet axino)
+#         ID            Width
+DECAY   5000002     1.00000000E-03   # singlet decays
+#           BR         NDA      ID1       ID2
+     1.00000000E-00    2           5        -5        # BR(singlet -> b b~)
